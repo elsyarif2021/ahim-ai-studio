@@ -1,0 +1,1 @@
+export default function handler(req,res){res.setHeader("Cache-Control","no-store");res.status(200).json({status:"ok",version:"4.0.0",cloudflareConfigured:!!(process.env.CLOUDFLARE_ACCOUNT_ID&&process.env.CLOUDFLARE_API_TOKEN),sonexConfigured:!!process.env.SONEX_API_KEY,note:"Provider configured is not proven runtime success."})}

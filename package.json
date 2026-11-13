@@ -1,0 +1,9 @@
+{
+  "name": "ahim-ai-studio",
+  "version": "4.0.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "check": "node --check api/ai.js && node --check api/voices.js && node --check api/health.js"
+  }
+}
