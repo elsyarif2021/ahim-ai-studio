@@ -5,6 +5,9 @@
     },
     "api/voices.js": {
       "maxDuration": 20
+    },
+    "api/video.js": {
+      "maxDuration": 60
     }
   }
 }

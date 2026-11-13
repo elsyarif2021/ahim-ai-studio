@@ -43,3 +43,16 @@ Pemeriksaan sintaks dan build **tidak membuktikan** kualitas output AI atau kebe
 ## Catatan sinkronisasi
 
 Repositori ini adalah **rekonstruksi source modular v4.0** dari implementasi Vercel. Source frontend/backend besar pada deployment tidak dapat diekspor secara penuh lewat konektor. Karena itu, kesetaraan byte-per-byte dengan build Vercel yang sedang online belum dapat dijamin. Jangan otomatis mengganti deployment produksi melalui Git integration tanpa pengujian.
+
+## Text-to-Video (Cloudflare AI Gateway)
+
+Menggunakan `xai/grok-imagine-video` (video AI generatif nyata, bukan slideshow). Model pihak ketiga **berbayar** melalui Cloudflare Unified Billing. Fitur **default terkunci** dan tidak membuat permintaan atau biaya selama `VIDEO_AI_ENABLED` tidak bernilai `true`.
+
+Di Vercel, hanya setelah pemilik akun menyetujui biaya, atur:
+
+```env
+VIDEO_AI_ENABLED=true
+VIDEO_AI_ACCESS_CODE=<kode privat acak minimal 12 karakter>
+```
+
+Jangan menyimpan kode akses pada source atau client. UI meminta kode tersebut setiap kali pemilik membuat video. Versi ini mendukung durasi 5 atau 10 detik, 480p/720p, rasio 9:16/16:9/1:1. **Video API dapat memerlukan waktu lebih dari 55 detik** atau mengembalikan job asinkron; kondisi tersebut ditampilkan sebagai belum selesai dan tidak dipalsukan sebagai keberhasilan. Keluaran video berasal dari URL provider; simpan MP4 melalui browser. Perlu pengujian inference berbayar setelah diaktifkan. Gunakan kuota dan pembatasan di Cloudflare untuk membatasi pengeluaran.
