@@ -6,7 +6,7 @@ const ORIGIN='https://ahim-ai-studio.vercel.app';
 function appOrigin(){
   // VERCEL_URL is platform-provided and only used on preview deployments.
   const host=String(process.env.VERCEL_URL||'');
-  if(process.env.VERCEL_ENV==='preview' && /^ahim-ai-studio-[a-z0-9-]+\\.vercel\\.app$/i.test(host)) {
+  if(process.env.VERCEL_ENV==='preview' && /^ahim-ai-studio-[a-z0-9-]+\.vercel\.app$/i.test(host)) {
     return 'https://'+host;
   }
   return ORIGIN;
