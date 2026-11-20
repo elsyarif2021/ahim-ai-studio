@@ -76,3 +76,23 @@ test('video prompt executor validates origin, supported skill, consent and input
     })){if(value===undefined)delete process.env[key];else process.env[key]=value;}
   }
 });
+
+test('Vercel preview origin is explicit and rejects arbitrary hosts',async()=>{
+  const keys=['VERCEL_ENV','VERCEL_URL','AGENSI_TEXT_EXEC_ENABLED','CLOUDFLARE_ACCOUNT_ID','CLOUDFLARE_API_TOKEN'];
+  const previous=Object.fromEntries(keys.map(k=>[k,process.env[k]]));
+  try{
+    process.env.VERCEL_ENV='preview';
+    process.env.VERCEL_URL='ahim-ai-studio-abc123-owner.vercel.app';
+    process.env.AGENSI_TEXT_EXEC_ENABLED='true';
+    process.env.CLOUDFLARE_ACCOUNT_ID='test-account';
+    process.env.CLOUDFLARE_API_TOKEN='test-token';
+    const payload={skill_slug:'ai-video-prompt-director',idea:'Camera pans over a green river valley',consent:true};
+    const headers={'content-type':'application/json',origin:'https://ahim-ai-studio-abc123-owner.vercel.app'};
+    assert.equal((await call('POST',{op:'execute'},headers,payload)).code,401);
+    assert.equal((await call('POST',{op:'execute'},{...headers,origin:'https://evil.vercel.app'},payload)).code,403);
+    process.env.VERCEL_URL='evil.vercel.app';
+    assert.equal((await call('POST',{op:'execute'},headers,payload)).code,403);
+  }finally{
+    for(const [k,v] of Object.entries(previous)){if(v===undefined)delete process.env[k];else process.env[k]=v;}
+  }
+});
