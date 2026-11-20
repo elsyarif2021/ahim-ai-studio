@@ -11,8 +11,8 @@ function response(){
     redirect(code,url){this.code=code;this.redirected=url;return this;}
   };
 }
-async function call(method='GET',query={op:'status'},headers={}){
-  const req={method,query,headers},res=response();
+async function call(method='GET',query={op:'status'},headers={},body){
+  const req={method,query,headers,body},res=response();
   await handler(req,res);return res;
 }
 test('status does not expose private tokens or secrets',async()=>{
@@ -44,4 +44,35 @@ test('unknown operation is rejected',async()=>{
 test('OAuth callback refuses nonexistent transaction',async()=>{
   const res=await call('GET',{op:'callback',code:'fake',state:'fake'});
   assert.equal(res.code,302);assert.match(res.redirected,/state_invalid/);
+});
+test('video prompt executor is disabled by default',async()=>{
+  const res=await call('POST',{op:'execute'},{origin:'https://ahim-ai-studio.vercel.app','content-type':'application/json'},{
+    skill_slug:'ai-video-prompt-director',idea:'A train crossing a mountain bridge',consent:true
+  });
+  assert.equal(res.code,503);
+  assert.match(res.body.error,/belum diaktifkan/i);
+});
+test('video prompt executor validates origin, supported skill, consent and input without network calls',async()=>{
+  const before={enabled:process.env.AGENSI_TEXT_EXEC_ENABLED,account:process.env.CLOUDFLARE_ACCOUNT_ID,token:process.env.CLOUDFLARE_API_TOKEN};
+  process.env.AGENSI_TEXT_EXEC_ENABLED='true';
+  process.env.CLOUDFLARE_ACCOUNT_ID='test-account';
+  process.env.CLOUDFLARE_API_TOKEN='test-token';
+  const valid={skill_slug:'ai-video-prompt-director',idea:'Golden sunlight on quiet farmland',consent:true};
+  const headers={origin:'https://ahim-ai-studio.vercel.app','content-type':'application/json'};
+  try{
+    assert.equal((await call('POST',{op:'execute'},{...headers,origin:'https://attacker.example'},valid)).code,403);
+    assert.equal((await call('POST',{op:'execute'},{origin:headers.origin},valid)).code,415);
+    assert.equal((await call('POST',{op:'execute'},headers,{...valid,skill_slug:'paid-untrusted-skill'})).code,400);
+    assert.equal((await call('POST',{op:'execute'},headers,{...valid,consent:false})).code,400);
+    assert.equal((await call('POST',{op:'execute'},headers,{...valid,idea:' '})).code,400);
+    const noSession=await call('POST',{op:'execute'},headers,valid);
+    assert.equal(noSession.code,401);
+    assert.match(noSession.body.error,/hubungkan/i);
+  }finally{
+    for(const [key,value] of Object.entries({
+      AGENSI_TEXT_EXEC_ENABLED:before.enabled,
+      CLOUDFLARE_ACCOUNT_ID:before.account,
+      CLOUDFLARE_API_TOKEN:before.token
+    })){if(value===undefined)delete process.env[key];else process.env[key]=value;}
+  }
 });
