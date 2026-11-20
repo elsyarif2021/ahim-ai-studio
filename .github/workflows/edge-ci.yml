@@ -30,11 +30,15 @@ jobs:
       - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
         with:
           node-version: '22'
+      - name: Enable pinned pnpm (avoids npm Arborist resolution crash)
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.20.0 --activate
       - name: Install dependencies (staging only)
-        run: npm install --no-audit --no-fund
+        run: pnpm install --no-frozen-lockfile
       - name: Syntax check
-        run: npm run check
+        run: pnpm run check
       - name: Runtime unit tests (D1/KV/R2)
-        run: npm test
+        run: pnpm test
       - name: Wrangler dry run (never deploy)
-        run: npm run build
+        run: pnpm run build
