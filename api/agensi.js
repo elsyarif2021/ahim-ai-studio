@@ -3,6 +3,14 @@ import { randomBytes, createHash, createCipheriv, createDecipheriv, timingSafeEq
 const RESOURCE='https://mcp.agensi.io/mcp/auth';
 const METADATA='https://mcp.agensi.io/.well-known/oauth-authorization-server';
 const ORIGIN='https://ahim-ai-studio.vercel.app';
+function appOrigin(){
+  // VERCEL_URL is platform-provided and only used on preview deployments.
+  const host=String(process.env.VERCEL_URL||'');
+  if(process.env.VERCEL_ENV==='preview' && /^ahim-ai-studio-[a-z0-9-]+\\.vercel\\.app$/i.test(host)) {
+    return 'https://'+host;
+  }
+  return ORIGIN;
+}
 const COOKIE_TX='ahim_agensi_tx';
 const COOKIE_ACCESS='ahim_agensi_access';
 const COOKIE_REFRESH='ahim_agensi_refresh';
@@ -58,7 +66,7 @@ async function requestJson(url,options={}){
   if(!r.ok)throw Object.assign(new Error(data.error_description||data.error||'Agensi HTTP '+r.status),{status:r.status===429?429:502});
   return data;
 }
-function cbUrl(){return ORIGIN+'/api/agensi?op=callback';}
+function cbUrl(){return appOrigin()+'/api/agensi?op=callback';}
 function safeEqual(a,b){
   const x=Buffer.from(String(a||'')),y=Buffer.from(String(b||''));
   return x.length===y.length && timingSafeEqual(x,y);
@@ -150,7 +158,7 @@ async function runPromptWithCloudflare(skill,idea){
 async function executeVideoSkill(req,res){
   // Disabled by default; the owner must enable this only after external rate limiting is set.
   if(!executionEnabled())return fail(res,503,'Eksekusi prompt Agensi belum diaktifkan oleh admin.');
-  if(req.headers.origin!==ORIGIN)return fail(res,403,'Permintaan bukan dari aplikasi AHIM.');
+  if(req.headers.origin!==appOrigin())return fail(res,403,'Permintaan bukan dari aplikasi AHIM.');
   if(!/^application\/json(?:;|$)/i.test(String(req.headers['content-type']||'')))return fail(res,415,'Gunakan application/json.');
   const body=req.body;
   if(!body||typeof body!=='object'||Array.isArray(body))return fail(res,400,'Format input tidak valid.');
