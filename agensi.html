@@ -29,7 +29,7 @@
 <form id="form" class="search">
 <input id="query" type="search" aria-label="Kata kunci skill" maxlength="150" placeholder="Contoh: audit JavaScript, AI video, teacher assessment" required>
 <button id="search" type="submit" disabled>🔎 Cari Skill</button>
-</form><div role="status" aria-live="polite" class="status" id="status"></div>
+</form><div class="actions"><button id="library" class="outline" type="button" disabled>📚 Pustaka Saya</button></div><div role="status" aria-live="polite" class="status" id="status"></div>
 </section>
 <div class="section-title"><h2>Hasil pencarian</h2><span id="count" class="hint">Belum ada pencarian</span></div>
 <div id="results"><div class="empty">Hubungkan Agensi untuk melakukan pencarian langsung melalui MCP.</div></div>
@@ -60,7 +60,7 @@ async function status(){
   $('badge').textContent=connected?'● Terhubung':configured?'● Belum terhubung':'⚠ Perlu konfigurasi';
   $('badge').classList.toggle('warn',!connected);
   $('connectionText').textContent=connected?'Akun Agensi sudah terhubung di browser ini. Pencarian skill melalui MCP tersedia.':configured?'Koneksi OAuth telah disiapkan. Anda dapat menghubungkan akun secara sadar.':'Konfigurasi backend AGENSI_SESSION_SECRET belum tersedia. Admin perlu mengaktifkannya pada Vercel.';
-  $('connect').hidden=connected;$('connect').disabled=!configured;$('disconnect').hidden=!connected;$('search').disabled=!connected;
+  $('connect').hidden=connected;$('connect').disabled=!configured;$('disconnect').hidden=!connected;$('search').disabled=!connected;$('library').disabled=!connected;
   if(connected)message('Siap mencari skill. Tidak ada pembelian otomatis.');
  }catch(e){$('badge').textContent='⚠ Status tidak tersedia';$('connectionText').textContent='Tidak dapat memeriksa API Agensi: '+e.message;$('connect').disabled=true;message('Periksa deployment Vercel dan endpoint backend.');}
 }
@@ -85,6 +85,19 @@ $('form').onsubmit=async event=>{
   message('Pencarian selesai. Buka skill untuk melihat detail dan ketentuan pemakaiannya.');
  }catch(e){$('results').replaceChildren(el('div','empty','Pencarian gagal.'));message(e.message);}
  finally{$('search').disabled=!connected;}
+};
+$('library').onclick=async()=>{
+ if(!connected)return;
+ $('library').disabled=true;message('Memuat pustaka Agensi...');
+ try{
+  const data=await json(endpoint+'?op=library');
+  const list=Array.isArray(data.library)?data.library:[];
+  $('count').textContent=list.length+' skill di pustaka';
+  if(!list.length)$('results').replaceChildren(el('div','empty','Pustaka masih kosong atau tidak tersedia.'));
+  else{const grid=el('div','grid');populate(grid,list);$('results').replaceChildren(grid);}
+  message('Pustaka akun berhasil diperiksa.');
+ }catch(e){message('Gagal memuat pustaka: '+e.message);}
+ finally{$('library').disabled=!connected;}
 };
 populate($('recommended'),suggested);
 const params=new URLSearchParams(location.search);
