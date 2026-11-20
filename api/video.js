@@ -29,7 +29,7 @@ export default async function handler(req,res){
  const obj=data?.result??data;
  const url=obj?.video??obj?.result?.video??obj?.output?.video;
  if(typeof url==="string"){
-   const u=new URL(url);
+   let u;try{u=new URL(url)}catch{return error(res,502,"URL video dari provider tidak valid.")}
    if(u.protocol!=="https:")return error(res,502,"URL video tidak aman.");
    return res.status(200).json({status:"completed",video_url:u.href,model:"xai/grok-imagine-video"});
  }
