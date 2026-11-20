@@ -35,6 +35,15 @@ describe('AHIM Cloudflare Edge',()=>{
     expect(res.status).toBe(503);
   });
 
+  test('rejects unsigned identity even when Access is configured',async()=>{
+    const live=createApp();
+    const res=await live.request('http://localhost/v1/me',{},makeEnv({
+      ACCESS_TEAM_DOMAIN:'example.cloudflareaccess.com',
+      ACCESS_AUD:'example-audience'
+    }));
+    expect(res.status).toBe(401);
+  });
+
   test('rejects untrusted browser origins',async()=>{
     const res=await app.request('http://localhost/v1/me',{headers:{Origin:'https://attacker.invalid'}},makeEnv());
     expect(res.status).toBe(403);
@@ -111,6 +120,21 @@ describe('AHIM Cloudflare Edge',()=>{
     const del=await app.request('http://localhost/v1/media/'+item.id,{method:'DELETE',headers:actor('test-asset-a')},bindings);
     expect(del.status).toBe(200);
     expect((await del.json()).deleted).toBe(true);
+  });
+
+  test('AI-generated image stores a private R2 asset',async()=>{
+    const bytes=String.fromCharCode(255,216,255,217);
+    const bindings=makeEnv({AI:{run:vi.fn(async()=>({image:btoa(bytes)}))}});
+    const create=await app.request('http://localhost/v1/generate',{
+      method:'POST',headers:jsonHeaders('test-image-generate'),
+      body:JSON.stringify({task:'image',prompt:'Ilustrasi tanaman hijau'})
+    },bindings);
+    expect(create.status).toBe(200);
+    const result=await create.json();
+    expect(result.asset_id).toMatch(/^[0-9a-f-]{36}$/);
+    const file=await app.request('http://localhost'+result.download_url,{headers:actor('test-image-generate')},bindings);
+    expect(file.status).toBe(200);
+    expect(file.headers.get('content-type')).toContain('image/jpeg');
   });
 
   test('rejects unsafe media content types before uploading',async()=>{
