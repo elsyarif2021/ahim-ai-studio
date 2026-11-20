@@ -127,7 +127,7 @@ export default async function handler(req,res){
       const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),created:Date.now()};
       setCookies(res,[[COOKIE_TX,seal(tx),600]]);
       const auth=new URL(allowed(meta.authorization_endpoint));
-      for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope:'read install',state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
+      for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope:'read',state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
       return res.redirect(302,auth.href);
     }
     if(op==='callback' && req.method==='GET'){
