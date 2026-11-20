@@ -1,0 +1,27 @@
+{
+  "name": "ahim-edge-test",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-11-20",
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "ahim-edge-test-db"
+    }
+  ],
+  "kv_namespaces": [
+    {
+      "binding": "CONFIG_KV"
+    }
+  ],
+  "r2_buckets": [
+    {
+      "binding": "MEDIA",
+      "bucket_name": "ahim-edge-test-media"
+    }
+  ],
+  "vars": {
+    "PUBLIC_APP_ORIGIN": "https://ahim-ai-studio.vercel.app",
+    "MAX_AI_PER_HOUR": "2",
+    "MAX_UPLOAD_BYTES": "8388608"
+  }
+}
