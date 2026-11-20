@@ -5,7 +5,7 @@ import path from 'node:path';
 export default defineConfig({
   plugins: [
     cloudflareTest(async () => ({
-      wrangler: {configPath: './wrangler.jsonc'},
+      wrangler: {configPath: './wrangler.test.jsonc'},
       miniflare: {
         bindings: {
           TEST_MIGRATIONS: await readD1Migrations(path.join(process.cwd(), 'migrations'))
