@@ -151,7 +151,7 @@ async function executeVideoSkill(req,res){
   // Disabled by default; the owner must enable this only after external rate limiting is set.
   if(!executionEnabled())return fail(res,503,'Eksekusi prompt Agensi belum diaktifkan oleh admin.');
   if(req.headers.origin!==ORIGIN)return fail(res,403,'Permintaan bukan dari aplikasi AHIM.');
-  if(!/^application\\/json(?:;|$)/i.test(String(req.headers['content-type']||'')))return fail(res,415,'Gunakan application/json.');
+  if(!/^application\/json(?:;|$)/i.test(String(req.headers['content-type']||'')))return fail(res,415,'Gunakan application/json.');
   const body=req.body;
   if(!body||typeof body!=='object'||Array.isArray(body))return fail(res,400,'Format input tidak valid.');
   const {skill_slug,idea,consent}=body;
