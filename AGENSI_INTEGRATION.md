@@ -41,3 +41,39 @@ Visit:
 - \`https://ahim-ai-studio.vercel.app/api/agensi?op=status\`
 
 Do not add API tokens or OAuth secrets to \`index.html\`, \`agensi.html\`, or committed repository files.
+
+## Optional: run a free video prompt skill (staging)
+The Agensi Hub now includes an opt-in **AI Video Prompt Director** text-only console.
+It only supports the owned, currently free `ai-video-prompt-director` skill. The server
+retrieves the licensed guidance transiently via Agensi OAuth/MCP, never stores it in
+GitHub or returns the skill source to the browser, and uses the existing Cloudflare
+AI REST credentials for text inference. **It does not render video or execute scripts.**
+
+- Feature is **disabled by default**, including on production.
+- Vercel env `AGENSI_TEXT_EXEC_ENABLED=true` enables the console only when
+  `CLOUDFLARE_ACCOUNT_ID` and `CLOUDFLARE_API_TOKEN` are also configured.
+- **Before enabling**: add enforceable account-side API spend caps and a
+  persistent per-identity / per-IP rate limit at the edge or gateway. The
+  current serverless function is not itself a distributed rate limiter.
+- Users must connect their own Agensi account, own the free skill, enter an idea,
+  and explicitly agree to potential Cloudflare inference charges.
+- Do not set a paid skill slug, call `get_skill(confirm=true)`, use
+  `quote_tool`, or call `run_tool` from this endpoint. All paid Agensi tools remain
+  unsupported.
+- The OAuth `read` scope, Agensi session policy, and live MCP `get_skill`
+  response must be verified manually in staging. If the skill changes price,
+  is removed, or requires executable tools, fail closed.
+- Set `AGENSI_TEXT_EXEC_ENABLED=false` to immediately turn this feature off.
+  Existing Agensi search/library functionality remains available.
+
+### Staging verification
+1. Use a preview environment with the feature flag on, provider credentials
+   set as encrypted backend secrets, and account billing controls active.
+2. Confirm `GET /api/agensi?op=status` exposes only booleans, not tokens.
+3. Without login confirm `POST /api/agensi?op=execute` returns 401
+   after input validation. Cross-origin requests must return 403.
+4. Connect Agensi knowingly (only one active agent per account is supported);
+   check free library ownership, then test one short prompt with consent.
+5. Confirm returned JSON has `type=text_prompt` and contains no raw licensed
+   instructions or user credentials. Check browser mobile and desktop.
+6. Confirm disabling the flag blocks all subsequent execution.
