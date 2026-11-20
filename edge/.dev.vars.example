@@ -1,0 +1,7 @@
+# Copy this file to .dev.vars for local Wrangler development.
+# Cloudflare Access JWT verification is REQUIRED even locally; no dev bypass.
+# Create an Access app in Cloudflare Zero Trust protecting the Worker.
+ACCESS_TEAM_DOMAIN=your-team.cloudflareaccess.com
+ACCESS_AUD=replace-with-access-app-audience-tag
+
+# Never commit .dev.vars or credentials.
