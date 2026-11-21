@@ -59,3 +59,16 @@ test('Agensi video status cannot disclose another session job',async()=>{
   const res=await call('POST',{op:'video-check'},{'content-type':'application/json',origin:'https://ahim-ai-studio.vercel.app'});
   assert.equal(res.code,401);
 });
+
+test('audio-enabled Agensi video has explicitly selectable model and gated price', async()=>{
+  const {readFileSync}=await import('node:fs');
+  const api=readFileSync(new URL('../api/agensi.js',import.meta.url),'utf8');
+  const html=readFileSync(new URL('../agensi.html',import.meta.url),'utf8');
+  assert.match(api,/openrouter\.x\.kwaivgi-kling-v3-0-std/);
+  assert.match(api,/generate_audio:true/);
+  assert.match(api,/video_mode='silent'/);
+  assert.match(api,/amount>selected\.priceCeiling/);
+  assert.match(html,/id="videoMode"/);
+  assert.match(html,/value="sound" selected/);
+  assert.match(html,/video_mode:\$\('videoMode'\)\.value/);
+});
