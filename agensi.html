@@ -7,6 +7,7 @@
 <title>Agensi Skills Hub · AHIM AI Studio</title>
 <style>
 :root{color-scheme:dark;--bg:#091c14;--panel:#102c1e;--panel2:#173b29;--border:#456c51;--accent:#f0d48c;--text:#eef6ed;--muted:#bfd1c1}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 35% -15%,#22583a,#091c14 62%);font:15px/1.6 system-ui,Segoe UI,sans-serif;color:var(--text);min-height:100dvh}a{color:var(--accent)}.wrap{max-width:1140px;margin:auto;padding:20px}.header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:12px 0 23px;border-bottom:1px solid var(--border)}.back{font-weight:700;text-decoration:none;color:var(--accent)}.back:hover{text-decoration:underline}.brand{font-size:13px;color:var(--muted)}h1{font-size:clamp(26px,4vw,39px);color:var(--accent);line-height:1.2;margin:25px 0 12px}h2{font-size:19px;margin:0 0 12px}.intro{max-width:720px;color:var(--muted);margin:0 0 23px}.panel{background:var(--panel);border:1px solid var(--border);padding:20px;border-radius:17px;margin-bottom:20px}.notice{border-left:3px solid var(--accent);background:#283822;padding:12px 15px;color:#e5e3cf;font-size:13px;margin:17px 0;border-radius:5px}button,.linkbutton{background:var(--accent);color:#112e1e;border:0;border-radius:10px;padding:11px 18px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-block;font:inherit}button:disabled{opacity:.55;cursor:default}.outline{border:1px solid #779480;background:#234934;color:white}.danger{background:#562a2a;color:white;border:1px solid #936060}.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{display:inline-flex;align-items:center;border-radius:99px;background:#254b34;color:#d1f5d7;border:1px solid #496c54;padding:4px 10px;font-size:12px;font-weight:650}.badge.warn{background:#5b4224;color:#ffedc3;border-color:#92723f}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:17px 0}.skill{border:1px solid var(--border);background:var(--panel);padding:17px;border-radius:14px;display:flex;flex-direction:column;gap:8px}.skill h3{margin:0;font-size:16px;line-height:1.45}.skill p{color:var(--muted);font-size:13px;margin:0;flex:1}.skill a{font-size:13px;font-weight:700}.skill small{color:#b9d3c0}.search{display:flex;gap:10px}.search input{flex:1;min-width:0;border:1px solid var(--border);color:white;background:#0c2518;padding:14px;border-radius:10px;font:inherit}.search input:focus{outline:2px solid #b6ce98;outline-offset:2px}.hint,.status{color:var(--muted);font-size:13px}.status{min-height:20px;margin-top:9px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.empty{text-align:center;padding:20px;color:var(--muted);border:1px dashed var(--border);border-radius:12px}footer{border-top:1px solid var(--border);padding:20px 0 30px;color:var(--muted);font-size:12px;margin-top:30px}#results{min-height:70px}@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.wrap{padding:15px}.grid{grid-template-columns:1fr}.search{flex-direction:column}.panel{padding:16px}.header{align-items:start}button{width:auto}}
+[hidden]{display:none!important}.run-input{display:block;width:100%;min-height:115px;resize:vertical;border:1px solid var(--border);border-radius:10px;padding:12px;background:#0c2518;color:var(--text);font:inherit}.run-output{white-space:pre-wrap;overflow-wrap:anywhere;padding:15px;border:1px solid var(--border);border-radius:10px;background:#071b12;max-height:480px;overflow:auto}.run-consent{display:flex;align-items:flex-start;gap:10px;font-size:13px;color:var(--muted);margin-top:12px}.run-consent input{margin-top:5px}
 </style>
 </head>
 <body>
@@ -31,6 +32,17 @@
 <button id="search" type="submit" disabled>🔎 Cari Skill</button>
 </form><div class="actions"><button id="library" class="outline" type="button" disabled>📚 Pustaka Saya</button></div><div role="status" aria-live="polite" class="status" id="status"></div>
 </section>
+<section class="panel" aria-labelledby="executorHeading">
+<h2 id="executorHeading">🎬 AI Video Prompt Director · Jalankan skill gratis</h2>
+<p class="hint">Ubah ide menjadi prompt video bahasa Inggris menggunakan panduan skill Agensi milik Anda. Ini hanya menghasilkan teks prompt, bukan file video. Tidak menjalankan alat berbayar Agensi.</p>
+<p class="hint" id="executorInfo">Memeriksa kesiapan layanan...</p>
+<label for="videoIdea" class="hint">Ide video (5–4000 karakter)</label>
+<textarea id="videoIdea" class="run-input" maxlength="4000" placeholder="Contoh: Pemandangan sawah Jawa Barat saat matahari terbit, kamera maju perlahan, durasi 10 detik."></textarea>
+<label class="run-consent" for="videoAiConsent"><input id="videoAiConsent" type="checkbox"><span>Saya memahami bahwa permintaan ini menggunakan Cloudflare AI untuk menghasilkan teks dan dapat menimbulkan biaya inferensi sesuai pengaturan pemilik aplikasi.</span></label>
+<div class="actions"><button id="execute" type="button" disabled>✦ Buat Prompt Video</button><button id="copyPrompt" type="button" class="outline" disabled>Salin hasil</button></div>
+<div role="status" aria-live="polite" class="status" id="runStatus"></div>
+<div id="runOutput" class="run-output" hidden></div>
+</section>
 <div class="section-title"><h2>Hasil pencarian</h2><span id="count" class="hint">Belum ada pencarian</span></div>
 <div id="results"><div class="empty">Hubungkan Agensi untuk melakukan pencarian langsung melalui MCP.</div></div>
 <section class="panel"><h2>Rekomendasi untuk AHIM</h2><p class="hint">Pilihan skill gratis dari katalog Agensi. Tautan ini dapat dibuka tanpa menyambungkan akun.</p>
@@ -42,25 +54,35 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const endpoint='/api/agensi';
-let connected=false,configured=false;
+let connected=false,configured=false,executionEnabled=false,latestPrompt='';
 const suggested=[
  {name:'Code Review Lite',url:'https://agensi.io/skills/code-review-lite-severity-checklist',best_for:'Audit bug dan risiko kode JavaScript.',price_usd:0},
  {name:'Cloudflare Workers AI',url:'https://agensi.io/skills/cloudflare-workers-edge-apis-with-d1-kv-r2-ai',best_for:'Backend Cloudflare, D1, KV, R2, dan AI.',price_usd:0},
  {name:'AI Video Prompt Director',url:'https://agensi.io/skills/ai-video-prompt-director',best_for:'Storyboard dan prompt video sinematik.',price_usd:0}
 ];
 function el(tag,className,text){const e=document.createElement(tag);if(className)e.className=className;if(text!==undefined)e.textContent=text;return e;}
-function card(item){const c=el('article','skill'),heading=el('h3','',item.name||'Skill tanpa nama'),price=el('small','',Number(item.price_usd)===0?'GRATIS':'US$ '+Number(item.price_usd).toFixed(2)+' · '+(item.pricing_type||'berbayar')),p=el('p','',item.best_for||'Detail dapat dilihat di marketplace.'),a=el('a','','Buka detail di Agensi');a.href=item.url&&item.url.startsWith('https://agensi.io/')?item.url:'https://agensi.io/skills';a.target='_blank';a.rel='noopener noreferrer';c.append(heading,price,p,a);return c;}
+function skillPrice(item){
+ if(item.now_paid===true)return 'SEKARANG BERBAYAR · Periksa harga di Agensi';
+ if(item.source==='free'||item.cost==='free'||item.pricing_type==='free'||item.price_usd===0||item.price_usd==='0')return 'GRATIS';
+ const amount=typeof item.price_usd==='number'?item.price_usd:
+   typeof item.price_usd==='string'&&item.price_usd.trim()!==''?Number(item.price_usd):NaN;
+ if(Number.isFinite(amount)&&amount>=0)return amount===0?'GRATIS':'US$ '+amount.toFixed(2)+' · berbayar';
+ return 'Harga belum tersedia · periksa di Agensi';
+}
+function card(item){const c=el('article','skill'),heading=el('h3','',item.name||'Skill tanpa nama'),price=el('small','',skillPrice(item)),p=el('p','',item.best_for||'Detail dapat dilihat di marketplace.'),a=el('a','','Buka detail di Agensi');a.href=item.url&&item.url.startsWith('https://agensi.io/')?item.url:'https://agensi.io/skills';a.target='_blank';a.rel='noopener noreferrer';c.append(heading,price,p,a);return c;}
 function populate(parent,items){parent.replaceChildren(...items.map(card));}
 function message(s){$('status').textContent=s;}
 async function json(url,options){const r=await fetch(url,{credentials:'same-origin',cache:'no-store',...options}),data=await r.json().catch(()=>({error:'Respons server tidak valid.'}));if(!r.ok)throw Error(data.error||'HTTP '+r.status);return data;}
 async function status(){
  try{
   const x=await json(endpoint+'?op=status');
-  connected=!!x.connected;configured=!!x.configured;
+  connected=!!x.connected;configured=!!x.configured;executionEnabled=!!x.promptExecutionEnabled;
   $('badge').textContent=connected?'● Terhubung':configured?'● Belum terhubung':'⚠ Perlu konfigurasi';
   $('badge').classList.toggle('warn',!connected);
   $('connectionText').textContent=connected?'Akun Agensi sudah terhubung di browser ini. Pencarian skill melalui MCP tersedia.':configured?'Koneksi OAuth telah disiapkan. Anda dapat menghubungkan akun secara sadar.':'Konfigurasi backend AGENSI_SESSION_SECRET belum tersedia. Admin perlu mengaktifkannya pada Vercel.';
   $('connect').hidden=connected;$('connect').disabled=!configured;$('disconnect').hidden=!connected;$('search').disabled=!connected;$('library').disabled=!connected;
+  $('execute').disabled=!(connected && executionEnabled);
+  $('executorInfo').textContent=!executionEnabled?'Admin belum mengaktifkan AGENSI_TEXT_EXEC_ENABLED dan kredensial Cloudflare AI.':!connected?'Hubungkan Agensi terlebih dahulu untuk menggunakan skill video.':'Skill teks siap digunakan. Tidak ada pembelian otomatis.';
   if(connected)message('Siap mencari skill. Tidak ada pembelian otomatis.');
  }catch(e){$('badge').textContent='⚠ Status tidak tersedia';$('connectionText').textContent='Tidak dapat memeriksa API Agensi: '+e.message;$('connect').disabled=true;message('Periksa deployment Vercel dan endpoint backend.');}
 }
@@ -99,6 +121,21 @@ $('library').onclick=async()=>{
  }catch(e){message('Gagal memuat pustaka: '+e.message);}
  finally{$('library').disabled=!connected;}
 };
+$('execute').onclick=async()=>{
+ const idea=$('videoIdea').value.trim();
+ if(!connected||!executionEnabled){$('runStatus').textContent='Layanan belum tersedia atau Agensi belum terhubung.';return;}
+ if(idea.length<5){$('runStatus').textContent='Tuliskan ide video minimal 5 karakter.';return;}
+ if(!$('videoAiConsent').checked){$('runStatus').textContent='Centang persetujuan inferensi AI terlebih dahulu.';return;}
+ $('execute').disabled=true;$('copyPrompt').disabled=true;$('runStatus').textContent='Menyusun prompt video melalui skill Agensi...';$('runOutput').hidden=true;
+ try{
+  const data=await json(endpoint+'?op=execute',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({skill_slug:'ai-video-prompt-director',idea,consent:true})});
+  latestPrompt=typeof data.text==='string'?data.text:'';if(!latestPrompt)throw Error('Prompt video kosong.');
+  $('runOutput').textContent=latestPrompt;$('runOutput').hidden=false;$('copyPrompt').disabled=false;
+  $('runStatus').textContent='Prompt video siap digunakan. Ini bukan hasil render video.';
+ }catch(e){$('runStatus').textContent='Gagal membuat prompt: '+e.message;}
+ finally{$('execute').disabled=!(connected&&executionEnabled);}
+};
+$('copyPrompt').onclick=async()=>{if(!latestPrompt)return;try{await navigator.clipboard.writeText(latestPrompt);$('runStatus').textContent='Prompt tersalin.';}catch{$('runStatus').textContent='Gagal menyalin. Blok teks pada hasil lalu salin manual.';}};
 populate($('recommended'),suggested);
 const params=new URLSearchParams(location.search);
 if(params.get('error'))message('Koneksi belum selesai: '+params.get('error')+'. Coba lagi jika diperlukan.');

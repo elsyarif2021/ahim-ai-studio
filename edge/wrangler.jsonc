@@ -1,0 +1,24 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "ahim-edge-api-staging",
+  "main": "./src/index.js",
+  "compatibility_date": "2026-11-20",
+  "observability": {"enabled": true},
+  "ai": {"binding": "AI"},
+  "d1_databases": [
+    {"binding": "DB", "database_name": "ahim-edge-staging"}
+  ],
+  "kv_namespaces": [
+    {"binding": "CONFIG_KV"}
+  ],
+  "r2_buckets": [
+    {"binding": "MEDIA", "bucket_name": "ahim-edge-media-staging"}
+  ],
+  "vars": {
+    "PUBLIC_APP_ORIGIN": "https://ahim-ai-studio.vercel.app",
+    "MAX_AI_PER_HOUR": "20",
+    "MAX_UPLOAD_BYTES": "8388608",
+    "CHAT_MODEL": "@cf/meta/llama-3.3-70b-instruct-fp8-fast",
+    "IMAGE_MODEL": "@cf/black-forest-labs/flux-1-schnell"
+  }
+}

@@ -1,0 +1,44 @@
+name: AHIM Cloudflare Edge checks
+
+on:
+  push:
+    branches:
+      - feat/cloudflare-edge-backend-20261121
+    paths:
+      - 'edge/**'
+      - '.github/workflows/edge-ci.yml'
+  pull_request:
+    paths:
+      - 'edge/**'
+      - '.github/workflows/edge-ci.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  checks:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    defaults:
+      run:
+        working-directory: edge
+    steps:
+      - uses: actions/checkout@11bd71901bbe5b1630ceea73d27597364c9af683 # v4.2.2
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4.4.0
+        with:
+          node-version: '22'
+      - name: Enable pinned pnpm (avoids npm Arborist resolution crash)
+        run: |
+          corepack enable
+          corepack prepare pnpm@10.20.0 --activate
+      - name: Install dependencies (staging only)
+        run: pnpm install --no-frozen-lockfile
+      - name: Syntax check
+        run: pnpm run check
+      - name: Runtime unit tests (D1/KV/R2)
+        run: pnpm test
+      - name: Wrangler dry run (never deploy)
+        run: pnpm run build
