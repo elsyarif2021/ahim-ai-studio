@@ -8,8 +8,10 @@ const COOKIE_ACCESS='ahim_agensi_access';
 const COOKIE_REFRESH='ahim_agensi_refresh';
 const COOKIE_VIDEO_QUOTE='ahim_agensi_video_quote';
 const COOKIE_VIDEO_JOB='ahim_agensi_video_job';
-const VIDEO_TOOL='replicate.video-gen.seedance-1-lite';
-const MAX_VIDEO_PRICE=0.5;
+const VIDEO_MODELS={
+ silent:{id:'replicate.video-gen.seedance-1-lite',name:'Seedance 1 Lite',priceCeiling:0.5,resolution:'480p',audio:false},
+ sound:{id:'openrouter.x.kwaivgi-kling-v3-0-std',name:'Kling v3.0 Standard',priceCeiling:1.5,resolution:'720p',audio:true}
+};
 function appOrigin(){
   const host=String(process.env.VERCEL_URL||'');
   if(process.env.VERCEL_ENV==='preview' && /^ahim-ai-studio-[a-z0-9-]+\.vercel\.app$/i.test(host))return 'https://'+host;
@@ -155,29 +157,32 @@ function sanitizeVideoJob(data){
 }
 async function quoteVideo(req,res){
   videoRequest(req);videoSession(req);videoPreviewOnly();
-  const {prompt,duration=5,aspect_ratio='16:9',resolution='480p'}=req.body;
+  const {prompt,duration=5,aspect_ratio='16:9',resolution='480p',video_mode='silent'}=req.body;
+  const selected=VIDEO_MODELS[video_mode];
+  if(!selected)return fail(res,400,'Mode video tidak dikenal.');
   if(typeof prompt!=='string'||prompt.trim().length<8||prompt.length>1600)
     return fail(res,400,'Prompt harus 8–1600 karakter.');
-  if(duration!==5||resolution!=='480p'||!['16:9','9:16','1:1'].includes(aspect_ratio))
-    return fail(res,400,'Mode Agensi hanya 5 detik, 480p.');
+  if(duration!==5||resolution!==selected.resolution||!['16:9','9:16','1:1'].includes(aspect_ratio))
+    return fail(res,400,'Mode Agensi hanya 5 detik, resolusi sesuai model.');
   const token=await getToken(req,res);
   const reply=await toolCall(token,'quote_tool',{
     skill_slug:'ai-video-prompt-director',
-    tool:VIDEO_TOOL,
-    request:{body:{input:{prompt:prompt.trim(),duration,resolution,aspect_ratio}}},
-    summary:'Satu video 5 detik 480p dari AHIM AI Studio',
+    tool:selected.id,
+    request:video_mode==='sound'?{body:{model:'kwaivgi/kling-v3.0-std',prompt:prompt.trim(),duration,resolution,aspect_ratio,generate_audio:true}}:
+      {body:{input:{prompt:prompt.trim(),duration,resolution,aspect_ratio}}},
+    summary:'Satu video 5 detik '+resolution+(selected.audio?' dengan suara':' tanpa suara')+' dari AHIM AI Studio',
     reason:'Menghitung harga video sebelum pengguna menyetujuinya.'
   });
   const amount=Number(reply.price_usd);
   if(reply.status!=='quote'||typeof reply.quote_id!=='string'||
-    !Number.isFinite(amount)||amount<=0||amount>MAX_VIDEO_PRICE)
-    return fail(res,502,'Penawaran harga Agensi tidak sesuai atau melebihi batas US$0,50.');
+    !Number.isFinite(amount)||amount<=0||amount>selected.priceCeiling)
+    return fail(res,502,'Harga Agensi tidak valid atau melampaui batas model terpilih.');
   const now=Date.now(),expires=now+Math.min(300000,Math.max(30000,
     Date.parse(reply.expires_at||'')-now||300000));
   setCookies(res,[[COOKIE_VIDEO_QUOTE,seal({id:reply.quote_id,price:amount,
-    expires,subject:prompt.trim()}),300],[COOKIE_VIDEO_JOB,'',0]]);
+    expires,subject:prompt.trim(),video_mode}),300],[COOKIE_VIDEO_JOB,'',0]]);
   return res.status(200).json({quote_id:reply.quote_id,price_usd:amount,
-    model:'Seedance 1 Lite',duration,resolution,aspect_ratio,expires_at:new Date(expires).toISOString(),
+    model:selected.name,video_mode,audio_requested:selected.audio,duration,resolution,aspect_ratio,expires_at:new Date(expires).toISOString(),
     requires_confirmation:true});
 }
 async function runVideo(req,res){
@@ -191,7 +196,7 @@ async function runVideo(req,res){
   const token=await getToken(req,res);
   const reply=await toolCall(token,'run_tool',{
     quote_id:saved.id,confirm:true,price_usd:saved.price,
-    reason:'Menjalankan video 5 detik sesuai penawaran yang disetujui pengguna.'
+    reason:'Menjalankan video 5 detik mode '+saved.video_mode+' sesuai penawaran yang disetujui pengguna.'
   });
   const data=sanitizeVideoJob(reply);
   if(data.job_id)setCookies(res,[[COOKIE_VIDEO_JOB,seal({id:data.job_id,created:Date.now()}),7200],
