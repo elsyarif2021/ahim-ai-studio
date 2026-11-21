@@ -34,14 +34,15 @@
 </section>
 <section class="panel" aria-labelledby="videoHeading">
 <h2 id="videoHeading">🎬 Text-to-Video Agensi · MP4</h2>
-<p class="hint">Buat video 5 detik 480p melalui Seedance 1 Lite dan saldo Agensi Anda. AHIM akan menampilkan harga terlebih dahulu; video hanya dibuat setelah Anda menyetujui biaya tersebut.</p>
+<p class="hint">Buat video MP4 5 detik melalui Agensi. Pilih mode dengan suara (Kling 720p) atau tanpa suara (Seedance 480p). Harga ditampilkan sebelum video dijalankan; audio dan ucapan tergantung hasil model.</p>
 <p id="videoConnectStatus" class="hint">Memeriksa izin Agensi...</p>
 <button type="button" class="outline" id="videoConnect" disabled>🔗 Izinkan Agensi untuk Video</button>
 <div class="actions"><label for="videoPrompt" class="hint">Deskripsi video</label></div>
 <textarea id="videoPrompt" class="video-textarea" maxlength="1600" placeholder="Contoh: Guru mengajar di sekolah Islami modern, kamera bergerak perlahan, pencahayaan alami."></textarea>
-<div class="actions"><label>Rasio <select id="videoAspect"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select></label><span class="hint">Durasi 5 detik · 480p</span></div>
+<div class="actions"><label for="videoMode">Jenis video</label><select id="videoMode"><option value="sound" selected>🔊 Dengan suara · Kling v3.0 Standard · 720p</option><option value="silent">🔇 Tanpa suara · Seedance 1 Lite · 480p</option></select></div>
+<div class="actions"><label>Rasio <select id="videoAspect"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select></label><span id="videoQuality" class="hint">Durasi 5 detik · 720p · Audio diminta</span></div>
 <div class="actions"><button id="videoQuote" type="button" disabled>1. Cek harga video</button></div>
-<div id="videoOffer" class="notice" hidden><strong id="videoOfferPrice">Harga belum tersedia</strong><p class="hint">Persetujuan hanya untuk satu render. Tarif dibayar dari saldo Agensi dan tidak dikenakan bila render gagal.</p><button type="button" id="videoRender" disabled>2. Setuju biaya dan buat MP4</button></div>
+<div id="videoOffer" class="notice" hidden><strong id="videoOfferPrice">Harga belum tersedia</strong><p class="hint">Persetujuan hanya untuk satu render. Tarif dibayar dari saldo Agensi dan tidak dikenakan bila render gagal. Mode bersuara meminta audio asli dari Kling, tetapi suara/dialog yang dihasilkan tidak selalu sempurna.</p><button type="button" id="videoRender" disabled>2. Setuju biaya dan buat MP4</button></div>
 <p id="videoProgress" class="status" role="status" aria-live="polite"></p><button type="button" class="outline" id="videoCheck" hidden>⟳ Cek progres video</button>
 <div id="videoFile" class="video-result" hidden></div>
 </section>
@@ -124,6 +125,13 @@ $('videoConnect').onclick=()=>{
 };
 function videoStatus(message){$('videoProgress').textContent=message;}
 function clearVideoQuote(){videoOffer=null;$('videoOffer').hidden=true;$('videoRender').disabled=true;}
+$('videoMode').onchange=()=>{
+ clearVideoQuote();
+ $('videoQuality').textContent=$('videoMode').value==='sound'?'Durasi 5 detik · 720p · Audio diminta':'Durasi 5 detik · 480p · Tanpa audio';
+ videoStatus('Mode berubah. Cek kembali harga sebelum menjalankan video.');
+};
+$('videoAspect').onchange=()=>{clearVideoQuote();videoStatus('Rasio berubah. Cek kembali harga.');};
+$('videoPrompt').oninput=()=>{if(videoOffer){clearVideoQuote();videoStatus('Prompt diubah. Cek kembali harga.');}};
 $('videoQuote').onclick=async()=>{
  if(!connected||!videoAuthorized)return videoStatus('Hubungkan akun Agensi dengan izin video dahulu.');
  const prompt=$('videoPrompt').value.trim();
@@ -132,10 +140,10 @@ $('videoQuote').onclick=async()=>{
  videoStatus('Menghitung harga video dari Agensi, belum ada tagihan...');
  try{
   const quote=await json(endpoint+'?op=video-quote',{method:'POST',headers:{'Content-Type':'application/json'},
-   body:JSON.stringify({prompt,aspect_ratio:$('videoAspect').value,duration:5,resolution:'480p'})});
+   body:JSON.stringify({prompt,aspect_ratio:$('videoAspect').value,duration:5,resolution:$('videoMode').value==='sound'?'720p':'480p',video_mode:$('videoMode').value})});
   if(!quote.quote_id||!(Number(quote.price_usd)>0))throw Error('Harga tidak valid.');
   videoOffer=quote;
-  $('videoOfferPrice').textContent='Harga satu video: US$ '+Number(quote.price_usd).toFixed(3)+' · Seedance 1 Lite';
+  $('videoOfferPrice').textContent='Harga satu video: US$ '+Number(quote.price_usd).toFixed(3)+' · '+quote.model+(quote.audio_requested?' · audio diaktifkan':' · tanpa audio');
   $('videoOffer').hidden=false;$('videoRender').disabled=false;
   videoStatus('Periksa harga. Tidak ada video yang dijalankan sebelum klik persetujuan.');
  }catch(e){videoStatus('Gagal menghitung harga: '+e.message);}
