@@ -12,7 +12,7 @@ function response(){
   };
 }
 async function call(method='GET',query={op:'status'},headers={}){
-  const req={method,query,headers},res=response();
+  const req={method,query,headers,body:null},res=response();
   await handler(req,res);return res;
 }
 test('status does not expose private tokens or secrets',async()=>{
@@ -35,7 +35,7 @@ test('disconnect requires POST and clears all session cookies',async()=>{
   const invalid=await call('GET',{op:'disconnect'});assert.equal(invalid.code,405);
   const ok=await call('POST',{op:'disconnect'});
   assert.equal(ok.code,200);assert.equal(ok.body.connected,false);
-  const cookies=ok.headers['Set-Cookie'];assert.equal(cookies.length,3);
+  const cookies=ok.headers['Set-Cookie'];assert.equal(cookies.length,5);
   for(const cookie of cookies){assert.match(cookie,/HttpOnly/);assert.match(cookie,/Secure/);assert.match(cookie,/Max-Age=0/);}
 });
 test('unknown operation is rejected',async()=>{
@@ -44,4 +44,18 @@ test('unknown operation is rejected',async()=>{
 test('OAuth callback refuses nonexistent transaction',async()=>{
   const res=await call('GET',{op:'callback',code:'fake',state:'fake'});
   assert.equal(res.code,302);assert.match(res.redirected,/state_invalid/);
+});
+test('Agensi video quote is not callable without same-origin authentication',async()=>{
+  const res=await call('POST',{op:'video-quote'},{'content-type':'application/json',origin:'https://attacker.invalid'});
+  assert.equal(res.code,403);
+  assert.match(res.body.error,/Asal permintaan/i);
+});
+test('Agensi video cannot be charged without a user session and explicit confirmation',async()=>{
+  const res=await call('POST',{op:'video-run'},{'content-type':'application/json',origin:'https://ahim-ai-studio.vercel.app'});
+  assert.equal(res.code,401);
+  assert.match(res.body.error,/hubungkan/i);
+});
+test('Agensi video status cannot disclose another session job',async()=>{
+  const res=await call('POST',{op:'video-check'},{'content-type':'application/json',origin:'https://ahim-ai-studio.vercel.app'});
+  assert.equal(res.code,401);
 });
