@@ -100,7 +100,7 @@ const $=id=>document.getElementById(id);
 const VISUAL=new Set(['Gambar AI','Poster','Infografis','Banner','Feed IG','Cover Buku','Sertifikat','Brosur','Logo','Komik','Mockup']);
 const TEXT=new Set(['Artikel','Materi Pelajaran','Rangkuman','LKPD','Worksheet','Slide','Chat AI','Prompt Sistem AI']);
 const ANALYZE={'Analisis Gambar':'vision','Transkripsi Audio':'asr','Analisis Video':'videotext'};
-const state={blob:null,objectUrl:null,variations:[],text:'',filename:'',externalUrl:'',quote:null,job:false,busy:false,connected:false,videoAuthorized:false,sonex:false};
+const state={blob:null,objectUrl:null,variations:[],text:'',docTitle:'',filename:'',externalUrl:'',quote:null,job:false,busy:false,connected:false,videoAuthorized:false,sonex:false};
 function msg(text){$('status').textContent=text;}
 function resultMsg(text){$('resultStatus').textContent=text;}
 function httpError(data,status){return Error(data&&data.error?data.error:'HTTP '+status);}
@@ -113,7 +113,7 @@ function clearQuote(){state.quote=null;$('offer').hidden=true;$('approveVideo').
 function clearResults(){
  if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl=null}
  for(const v of state.variations)URL.revokeObjectURL(v.url);state.variations=[];
- state.blob=null;state.filename='';state.text='';state.externalUrl='';state.job=false;
+ state.blob=null;state.filename='';state.text='';state.docTitle='';state.externalUrl='';state.job=false;
  $('result').replaceChildren();$('download').disabled=true;$('copy').disabled=true;$('print').disabled=true;
  $('download').textContent='↓ Unduh Hasil';$('copy').textContent='⧉ Salin Teks';
  $('checkJob').hidden=true;$('connectAgensi').hidden=true;clearQuote();resultMsg('');
@@ -209,18 +209,35 @@ async function downloadResult(){
    resultMsg('Membuka berkas MP4 dari Agensi. Jika diputar di browser, gunakan menu Simpan/Download video.');
   }catch(e){resultMsg('Tidak bisa membuka unduhan video: '+e.message);}return;
  }
+ if(state.text){
+  const title=state.docTitle||'Hasil AI';
+  const filename=state.filename||'AHIM-Hasil.docx';
+  const copy=state.text;
+  $('download').disabled=true;
+  resultMsg('Menyusun dokumen Word .docx asli...');
+  try{
+   const response=await postJSON('/api/docx',{title,text:copy});
+   const type=response.headers.get('content-type')||'';
+   if(!type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document'))
+    throw Error('Server tidak mengembalikan dokumen Word DOCX.');
+   const documentFile=await response.blob();
+   if(documentFile.size<500||!documentFile.type.includes('officedocument.wordprocessingml.document'))
+    throw Error('Berkas Word kosong atau tidak valid.');
+   await downloadBlob(documentFile,filename);
+  }catch(e){resultMsg('Gagal mengunduh DOCX: '+e.message);}
+  finally{$('download').disabled=false;}
+  return;
+ }
  if(!state.blob){resultMsg('Belum ada hasil yang dapat diunduh.');return;}
  try{await downloadBlob(state.blob,state.filename||'AHIM-Hasil');}
  catch(e){resultMsg('Gagal mengunduh: '+e.message);}
 }
-function downloadTextContent(text,kind){const html='<html lang="id"><head><meta charset="utf-8"><title>AHIM '+escapeHTML(kind)+'</title><style>body{font:14pt/1.6 Arial;color:#172c1f;margin:40px;white-space:pre-wrap}h1{font-size:19pt;color:#16492e}</style></head><body><h1>'+escapeHTML(kind)+'</h1><div>'+escapeHTML(text)+'</div></body></html>';return new Blob([html],{type:'text/html;charset=utf-8'});}
-function escapeHTML(str){return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function textResult(text,titleName){
- clearResults();state.text=text;state.blob=downloadTextContent(text,titleName||'Hasil AI');state.filename='AHIM-'+(titleName||'hasil').replace(/[^a-z0-9_-]/gi,'-')+'.html';
+ clearResults();state.text=text;state.docTitle=titleName||'Hasil AI';state.blob=null;state.filename='AHIM-'+(titleName||'hasil').replace(/[^a-z0-9_-]/gi,'-')+'.docx';
  const p=document.createElement('div');p.className='result-text';p.textContent=text;$('result').append(p);
  $('download').disabled=false;$('copy').disabled=false;$('print').disabled=false;
- $('download').textContent='↓ Unduh Dokumen HTML';$('copy').textContent='⧉ Salin Teks';
- resultMsg('Konten akhir siap. Klik Unduh HTML (bisa dibuka di Word), Salin Teks, atau Cetak/PDF.');
+ $('download').textContent='↓ Unduh Word (.docx)';$('copy').textContent='⧉ Salin Teks';
+ resultMsg('Konten akhir siap. Klik Unduh Word (.docx) untuk dokumen Microsoft Word asli yang dapat diedit; bukan HTML.');
 }
 function routeType(){
  const v=$('kind').value;
