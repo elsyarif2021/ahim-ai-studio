@@ -12,7 +12,7 @@ function response(){
   };
 }
 async function call(method='GET',query={op:'status'},headers={}){
-  const req={method,query,headers,body:null},res=response();
+  const req={method,query,headers,body:{}},res=response();
   await handler(req,res);return res;
 }
 test('status does not expose private tokens or secrets',async()=>{
