@@ -80,7 +80,7 @@ button.outline{background:#112b1e;color:#e7f5e8}.subline{margin-top:13px;display
    <div class="field" id="videoModeField" hidden><label for="videoMode">Suara dalam video</label><select id="videoMode"><option value="sound" selected>🔊 Dengan suara · Kling v3.0 · 720p</option><option value="silent">🔇 Tanpa suara · Seedance Lite · 480p</option></select><div class="small-note">Video 5 detik. Harga harus diperiksa dan disetujui sebelum setiap render. Audio asli bergantung pada hasil model.</div></div>
    <div class="field" id="sourceUrlField" hidden><label for="sourceUrl">URL gambar referensi (HTTPS)</label><input id="sourceUrl" type="url" placeholder="https://domain-anda.com/gambar.jpg"><div class="small-note">Untuk Gambar ke Video diperlukan URL gambar yang bisa diakses penyedia Agensi. Unggah gambar lokal belum didukung pada jalur ini.</div></div>
    <div class="field" id="exactField" hidden><label for="exactTitle">Teks utama pada desain (opsional, disalin persis)</label><input id="exactTitle" type="text" maxlength="160" placeholder="Judul yang wajib terbaca"><div class="small-note">Teks ini ditambahkan sebagai lapisan grafis setelah gambar AI dibuat, agar ejaan tetap sesuai.</div></div>
-   <div class="field"><label for="upload">Lampiran gambar, audio, atau video (opsional)</label><div class="filecontrol"><input id="upload" type="file" accept="image/*,audio/*,video/*"></div><div class="small-note" id="uploadHelp">Lampiran digunakan untuk analisis gambar, transkripsi audio, atau analisis satu frame video. Batas 7 MB.</div></div>
+   <div class="field"><label for="upload">Lampiran gambar, audio, atau video (opsional)</label><div class="filecontrol"><input id="upload" type="file" accept="image/*,audio/*,video/*"></div><div class="small-note" id="uploadHelp">Lampiran untuk analisis: gambar hingga 7 MB (akan dikompresi), audio maksimal 2,5 MB, video hingga 7 MB (hanya satu frame).</div></div>
    <div class="actions"><button id="generate" type="button" class="primary">✦ Generate Hasil</button><button id="clear" type="button" class="outline">Bersihkan</button></div>
    <div class="status" id="status" role="status" aria-live="polite">Siap. Pilih Otomatis atau tentukan jenis hasil jika ingin lebih spesifik.</div>
   </section>
@@ -162,7 +162,7 @@ function fitUI(){
  $('videoModeField').hidden=!(task==='video'||task==='imagevideo');
  $('sourceUrlField').hidden=task!=='imagevideo';
  $('exactField').hidden=task!=='image';
- $('uploadHelp').textContent=task==='imagevideo'?'Gambar ke Video membutuhkan URL HTTPS pada kolom di atas. Upload lokal belum tersedia untuk render video.':task==='videotext'?'Unggah video maksimal 7 MB: AHIM hanya memeriksa satu frame, bukan seluruh gerakan atau suara.':task==='image'?'Buat gambar dari teks. Lampiran referensi belum dapat dipakai untuk mengedit gambar.': 'Lampiran digunakan untuk analisis gambar, transkripsi audio, atau analisis satu frame video. Batas 7 MB.';
+ $('uploadHelp').textContent=task==='imagevideo'?'Gambar ke Video membutuhkan URL HTTPS pada kolom di atas. Upload lokal belum tersedia untuk render video.':task==='videotext'?'Unggah video maksimal 7 MB: AHIM hanya memeriksa satu frame, bukan seluruh gerakan atau suara.':task==='image'?'Buat gambar dari teks. Lampiran referensi belum dapat dipakai untuk mengedit gambar.': 'Gambar dapat dikompresi otomatis, audio maksimal 2,5 MB, video hingga 7 MB hanya untuk satu frame.';
  if(task==='vision')$('upload').accept='image/*';else if(task==='asr')$('upload').accept='audio/*';else if(task==='videotext')$('upload').accept='video/*';else $('upload').accept='image/*,audio/*,video/*';
  $('generate').textContent=task==='video'||task==='imagevideo'?'🎬 Cek Harga & Buat Video':task==='tts'?'♫ Buat Suara MP3':task==='text'?'✦ Tulis Konten Lengkap':task==='image'?'▧ Buat Gambar Asli':'◉ Analisis Berkas';
  if(kind==='auto')$('resultHint').textContent='Mode otomatis: '+({image:'gambar asli',video:'video MP4',imagevideo:'gambar menjadi video',text:'konten siap pakai',tts:'audio MP3',vision:'analisis gambar',asr:'transkripsi audio',videotext:'analisis satu frame video'}[task]||'hasil');
@@ -275,6 +275,16 @@ async function checkJob(){
  finally{$('checkJob').disabled=false;}
 }
 function fileAsData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Berkas tidak dapat dibaca.'));r.readAsDataURL(file);});}
+async function compressedVisionImage(file){
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Analisis gambar mendukung JPEG, PNG, atau WebP.');
+ const bitmap=await createImageBitmap(file);
+ try{
+  const ratio=Math.min(1,1200/Math.max(bitmap.width,bitmap.height));
+  const c=document.createElement('canvas');c.width=Math.round(bitmap.width*ratio);c.height=Math.round(bitmap.height*ratio);
+  const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(bitmap,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',.75);
+ }finally{if(bitmap.close)bitmap.close();}
+}
 async function readVideoFrame(file){
  const url=URL.createObjectURL(file);const video=document.createElement('video');
  try{
@@ -328,11 +338,11 @@ async function generatedImage(idea){
 }
 async function analyzedMedia(idea,task){
  const f=$('upload').files[0];if(!f)throw Error('Unggah berkas yang akan dianalisis terlebih dahulu.');
- if(f.size>7*1024*1024)throw Error('Ukuran berkas maksimal 7 MB.');
+ if(f.size>(task==='asr'?2.5:7)*1024*1024)throw Error(task==='asr'?'Audio maksimal 2,5 MB untuk batas unggahan server.':'Gambar/video maksimal 7 MB.');
  const expected=task==='vision'?'image/':task==='asr'?'audio/':'video/';
  if(!f.type.startsWith(expected))throw Error('Jenis lampiran tidak sesuai. Dibutuhkan '+expected+'*');
  const body={task,prompt:idea};
- if(task==='vision')body.image=await fileAsData(f);
+ if(task==='vision')body.image=await compressedVisionImage(f);
  else if(task==='asr')body.audio=await fileAsData(f);
  else body.image=await readVideoFrame(f);
  const r=await postJSON('/api/ai',body);const j=await r.json();if(!j.text)throw Error('Tidak ada hasil analisis.');
