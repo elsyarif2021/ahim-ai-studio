@@ -84,7 +84,8 @@ test('frontend exposes only 5s 480p before expanding rollout',()=>{
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
   assert.match(html,/videoEnabled=!!j\.videoEnabled/);
   assert.match(html,/\$\("generate"\)\.disabled=m==="video"&&!videoEnabled/);
-  assert.match(html,/option value="5">5 detik/);
-  assert.doesNotMatch(html,/option value="10">10 detik/);
-  assert.doesNotMatch(html,/option value="720p">720p/);
+  const videoSettings=html.split('<details id="videoSettings"')[1]?.split('<details id="imageSettings"')[0]||'';
+  assert.match(videoSettings,/option value="5">5 detik/);
+  assert.doesNotMatch(videoSettings,/option value="10">10 detik/);
+  assert.doesNotMatch(videoSettings,/option value="720p">720p/);
 });
