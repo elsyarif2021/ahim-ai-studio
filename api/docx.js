@@ -77,7 +77,8 @@ function table(rows){
     '<w:right w:val="single" w:sz="4" w:color="B2C6B7"/>'+
     '<w:insideH w:val="single" w:sz="3" w:color="C8D5CA"/>'+
     '<w:insideV w:val="single" w:sz="3" w:color="C8D5CA"/></w:tblBorders></w:tblPr>';
-  return '<w:tbl>'+tblPr+cells+'</w:tbl>';
+  const grid='<w:tblGrid>'+Array.from({length:cols},()=>'<w:gridCol w:w="'+Math.floor(9000/cols)+'"/>').join('')+'</w:tblGrid>';
+  return '<w:tbl>'+tblPr+grid+cells+'</w:tbl>';
 }
 function parseRow(line){
   if(!/^\s*\|.+\|\s*$/.test(line))return null;
