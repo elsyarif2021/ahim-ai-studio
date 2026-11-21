@@ -155,21 +155,34 @@ function sanitizeVideoJob(data){
   return {status:String(data.status||'unknown').slice(0,60),job_id:jobId,files,
     charged_usd:typeof data.charged_usd==='number'?data.charged_usd:null};
 }
+function acceptableImageUrl(value){
+  if(typeof value!=='string'||value.length>2000)return null;
+  try{
+    const u=new URL(value);
+    const h=u.hostname.toLowerCase();
+    if(u.protocol!=='https:'||u.username||u.password||u.port)return null;
+    if(!h.includes('.')||h==='localhost'||h.endsWith('.local')||/^[0-9.]+$/.test(h)||h.includes(':')||h.endsWith('.internal'))return null;
+    return u.href;
+  }catch{return null;}
+}
 async function quoteVideo(req,res){
   videoRequest(req);videoSession(req);videoPreviewOnly();
-  const {prompt,duration=5,aspect_ratio='16:9',resolution='480p',video_mode='silent'}=req.body;
+  const {prompt,duration=5,aspect_ratio='16:9',resolution='480p',video_mode='silent',image_url}=req.body;
   const selected=VIDEO_MODELS[video_mode];
   if(!selected)return fail(res,400,'Mode video tidak dikenal.');
   if(typeof prompt!=='string'||prompt.trim().length<8||prompt.length>1600)
     return fail(res,400,'Prompt harus 8–1600 karakter.');
   if(duration!==5||resolution!==selected.resolution||!['16:9','9:16','1:1'].includes(aspect_ratio))
     return fail(res,400,'Mode Agensi hanya 5 detik, resolusi sesuai model.');
+  const image=typeof image_url==='string'&&image_url.trim()?acceptableImageUrl(image_url.trim()):null;
+  if(image_url&&!image)return fail(res,400,'URL referensi harus berupa gambar HTTPS publik yang valid.');
+  if(image&&video_mode!=='silent')return fail(res,400,'Gambar ke Video untuk sementara hanya memakai Seedance tanpa audio.');
   const token=await getToken(req,res);
   const reply=await toolCall(token,'quote_tool',{
     skill_slug:'ai-video-prompt-director',
     tool:selected.id,
     request:video_mode==='sound'?{body:{model:'kwaivgi/kling-v3.0-std',prompt:prompt.trim(),duration,resolution,aspect_ratio,generate_audio:true}}:
-      {body:{input:{prompt:prompt.trim(),duration,resolution,aspect_ratio}}},
+      {body:{input:{prompt:prompt.trim(),duration,resolution,aspect_ratio,...(image?{image}:{})}}},
     summary:'Satu video 5 detik '+resolution+(selected.audio?' dengan suara':' tanpa suara')+' dari AHIM AI Studio',
     reason:'Menghitung harga video sebelum pengguna menyetujuinya.'
   });
@@ -180,9 +193,9 @@ async function quoteVideo(req,res){
   const now=Date.now(),expires=now+Math.min(300000,Math.max(30000,
     Date.parse(reply.expires_at||'')-now||300000));
   setCookies(res,[[COOKIE_VIDEO_QUOTE,seal({id:reply.quote_id,price:amount,
-    expires,subject:prompt.trim(),video_mode}),300],[COOKIE_VIDEO_JOB,'',0]]);
+    expires,subject:prompt.trim(),video_mode,has_image:!!image}),300],[COOKIE_VIDEO_JOB,'',0]]);
   return res.status(200).json({quote_id:reply.quote_id,price_usd:amount,
-    model:selected.name,video_mode,audio_requested:selected.audio,duration,resolution,aspect_ratio,expires_at:new Date(expires).toISOString(),
+    model:selected.name,video_mode,audio_requested:selected.audio,from_image:!!image,duration,resolution,aspect_ratio,expires_at:new Date(expires).toISOString(),
     requires_confirmation:true});
 }
 async function runVideo(req,res){
@@ -232,7 +245,7 @@ export default async function handler(req,res){
       const verifier=b64(randomBytes(48)),state=b64(randomBytes(24));
       const scope=req.query.video==='1'?'read install':'read';
       const challenge=b64(createHash('sha256').update(verifier).digest());
-      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),scope,created:Date.now()};
+      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),scope,returnTo:req.query.return==='studio'?'studio':'agensi',created:Date.now()};
       setCookies(res,[[COOKIE_TX,seal(tx),600]]);
       const auth=new URL(allowed(meta.authorization_endpoint));
       for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope,state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
@@ -247,7 +260,7 @@ export default async function handler(req,res){
       if(!data.access_token || !data.refresh_token)throw new Error('Token OAuth Agensi tidak lengkap.');
       const ttl=Math.max(60,Math.min(3600,Number(data.expires_in)||3600));
       setCookies(res,[accessCookie(data.access_token,ttl),refreshCookie({refresh_token:data.refresh_token,client_id:tx.client_id,token_endpoint:tx.token_endpoint,scope:tx.scope}),[COOKIE_TX,'',0]]);
-      return res.redirect(302,'/agensi.html?connected=1');
+      return res.redirect(302,tx.returnTo==='studio'?'/?agensi=connected':'/agensi.html?connected=1');
     }
     if(op==='video-quote' && req.method==='POST')return await quoteVideo(req,res);
     if(op==='video-run' && req.method==='POST')return await runVideo(req,res);

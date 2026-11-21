@@ -1,28 +1,500 @@
-<!doctype html><html lang="id"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><title>AHIM AI Studio</title><style>
-*{box-sizing:border-box}body{margin:0;background:#091c14;color:#ecf5ed;font:14px system-ui,Segoe UI,sans-serif}button,select,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.45;cursor:default}header{height:65px;background:#102b1d;border-bottom:1px solid #41694d;padding:0 16px;display:flex;align-items:center;justify-content:space-between}header strong{color:#f0d48c;font-size:20px}small,.muted{color:#bed0bf}.layout{height:calc(100dvh - 65px);display:grid;grid-template-columns:265px minmax(0,1fr)}.layout.closed{grid-template-columns:0 minmax(0,1fr)}nav{background:#10291d;border-right:1px solid #3a6248;padding:16px;overflow:auto;min-width:0}.closed nav{visibility:hidden;padding:0}nav h4{color:#ebd18b;letter-spacing:1px}nav button{display:block;width:100%;text-align:left;color:#e5f5ea;border:1px solid transparent;background:none;padding:12px;border-radius:9px;white-space:nowrap}nav button.active,nav button:hover{background:#285c3c;border-color:#638c6e}main{min-width:0;min-height:0;display:flex;flex-direction:column;background:radial-gradient(ellipse at top,#15412b,#0b2016 73%)}.heading{padding:14px 24px;border-bottom:1px solid #355941}.heading h2{font-size:23px;margin:0 0 3px}.results{flex:1;min-height:0;overflow:auto;padding:16px clamp(12px,4vw,46px)}.results-inner,.composer-inner{max-width:1100px;margin:auto}.empty{text-align:center;min-height:160px;display:flex;flex-direction:column;align-items:center;justify-content:center;color:#b9cabb}.empty b{color:#edcf86;font-size:45px}#output{line-height:1.7;white-space:pre-wrap;overflow-wrap:anywhere}#output:not(:empty){background:#183f2a;border:1px solid #578068;border-radius:14px;padding:20px}#output audio,#output img{display:block;max-width:100%;margin:10px auto}#status{color:#f0dba5;padding:11px 0;white-space:pre-wrap;font-size:12px}.composer{padding:10px clamp(12px,4vw,46px);border-top:1px solid #416f50;background:#10301f}details{background:#193d28;border:1px solid #456f52;border-radius:9px;margin-bottom:8px}summary{cursor:pointer;padding:11px;color:#ead18f;font-weight:650}.options{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:10px;padding:5px 12px 12px}.options label{font-size:12px;color:#c4d3c5}.options select,.options input{display:block;width:100%;border:1px solid #688c70;background:#0a2315;color:white;border-radius:7px;padding:9px;margin-top:4px}.prompt{border:1px solid #719178;background:#092115;border-radius:12px;padding:9px}textarea{display:block;background:none;color:#fff;width:100%;min-height:73px;max-height:160px;resize:vertical;border:0;outline:0;padding:8px}.buttons{display:flex;align-items:center;flex-wrap:wrap;gap:7px}button.primary{background:#f1d592;color:#10301f;font-weight:750;border:0;border-radius:8px;padding:11px 17px}button.secondary{color:#e9f5ea;border:1px solid #62816b;background:#21452f;border-radius:8px;padding:10px 13px}#upload{max-width:230px}.veil{display:none}[hidden]{display:none!important}@media(max-width:790px){.layout,.layout.closed{display:block}nav,.closed nav{position:fixed;top:65px;bottom:0;left:0;width:min(290px,80vw);z-index:4;visibility:visible;padding:14px;transform:translateX(0)}.closed nav{transform:translateX(-101%);pointer-events:none}.veil{position:fixed;inset:65px 0 0;background:#0009;z-index:3}.layout:not(.closed) .veil{display:block}main{height:calc(100dvh - 65px)}.heading{padding:10px 15px}.heading h2{font-size:19px}.results{padding:12px}.composer{padding:8px}.options{grid-template-columns:repeat(2,minmax(0,1fr))}header small{display:none}header strong{font-size:clamp(14px,4vw,20px)}header>div{gap:6px!important}header a[href="/agensi.html"]{font-size:11px;padding:6px!important}.buttons button{padding:9px;font-size:12px}}</style></head><body>
-<header><div style="display:flex;gap:12px;align-items:center"><button id="menu" class="secondary" aria-label="Menu">☰</button><strong>☪ AHIM AI STUDIO</strong><a href="/agensi.html" aria-label="Buka Agensi Skills Hub" style="font-weight:700;color:#f0d48c;text-decoration:none;border:1px solid #638c6e;border-radius:8px;padding:8px 10px;white-space:nowrap">🧩 Agensi</a></div><small id="health">Memeriksa layanan...</small></header><div class="layout" id="layout"><div class="veil" id="veil"></div><nav><h4>MENU SKILL AI</h4><div id="navitems"></div></nav><main><div class="heading"><h2 id="title"></h2><span id="description" class="muted"></span></div><section class="results" id="results"><div class="results-inner"><div id="empty" class="empty"><b>✧</b><strong>AHIM AI Studio siap berkarya</strong><p>Ide singkat, prompt hebat, desain kilat!</p></div><div id="output" aria-live="polite"></div><div id="status" role="status">Siap.</div></div></section>
-<section class="composer"><div class="composer-inner"><details id="promptSettings" open><summary>⚙ Prompt Kilat Ultimate · Pengaturan</summary><div class="options">
-<label>Jenis prompt<select id="kind"><option>Gambar AI</option><option>Video AI</option><option>Poster</option><option>Infografis</option><option>Banner</option><option>Feed IG</option><option>Slide</option><option>LKPD</option><option>Worksheet</option><option>Cover Buku</option><option>Sertifikat</option><option>Brosur</option><option>Logo</option><option>Komik</option><option>Mockup</option><option>Prompt Sistem AI</option></select></label>
-<label>Gaya<select id="style"><option>Islami Profesional</option><option>Minimalis Modern</option><option>Pastel Cute</option><option>Kawaii</option><option>Chibi</option><option>Clay 3D</option><option>Vibrant</option><option>Watercolor</option><option>Cinematic</option><option>Retro</option><option>Luxury</option></select></label>
-<label>Rasio<select id="ratio"><option>9:16</option><option>1:1</option><option>4:5</option><option>16:9</option><option>A4 Portrait</option><option>A4 Landscape</option></select></label>
-<label>Bahasa<select id="language"><option>Indonesia</option><option>English</option></select></label>
-<label>Mode<select id="promptMode"><option>Profesional Lengkap</option><option>Auto 5 Gaya</option><option>Guru-Friendly</option><option>Auto Layout</option><option>Video per Scene 10 Detik</option></select></label>
-<label>Durasi video<select id="duration"><option value="10">10 detik</option><option value="20">20 detik</option><option value="30">30 detik</option><option value="60">60 detik</option></select></label>
-</div></details><details id="voiceSettings" hidden><summary>🎙 Text-to-Voice · MP3 Indonesia</summary><div class="options"><label>Mesin<select id="engine"><option value="sonex">Sonex Labs · Download MP3</option><option value="browser">Suara perangkat · Putar</option></select></label><label>Bahasa<select id="voiceLang"><option value="id-ID">Indonesia</option><option value="en-US">English</option></select></label><label>Suara<select id="voiceId"><option value="">Suara default</option></select></label><label>Kecepatan<select id="speed"><option value="0.8">Lambat</option><option value="0.9">Sedikit lambat</option><option value="1" selected>Normal</option><option value="1.1">Sedikit cepat</option><option value="1.2">Cepat</option></select></label></div><p class="muted" id="voiceHelp" style="padding:0 12px 10px">Audio dibuat di server Sonex setelah respons berhasil.</p></details>
-<details id="videoSettings" hidden open><summary>🎬 Text-to-Video AI · MP4</summary><div class="options"><label>Rasio<select id="videoRatio"><option value="9:16">9:16 · Vertikal</option><option value="16:9">16:9 · Landscape</option><option value="1:1">1:1 · Square</option></select></label><label>Durasi<select id="videoDuration"><option value="5">5 detik</option></select></label><label>Resolusi<select id="videoResolution"><option value="480p">480p</option></select></label><label>Kode akses pemilik<input id="videoCode" type="password" autocomplete="off" placeholder="Kode video"></label></div><div style="padding:0 12px 12px"><label style="font-size:12px"><input id="videoConsent" type="checkbox"> Saya menyetujui penggunaan model video berbayar untuk permintaan ini.</label><p class="muted">Cloudflare Grok Imagine Video: tahap uji coba hanya 5 detik · 480p. Perkiraan biaya sekitar US$0,25 per video, tergantung tarif Cloudflare. Persetujuan hanya berlaku untuk satu permintaan. Jika fitur terkunci, gunakan <a href="/agensi.html" style="color:#f0d795">AI Video Prompt Director</a> untuk membuat teks prompt tanpa MP4.</p><p id="videoStatus" style="color:#f0d795;font-size:12px">Mengecek akses video...</p></div></details><details id="imageSettings" hidden><summary>🖼 Teks gambar persis</summary><div class="options"><label>Judul persis<input id="imageTitle" maxlength="120"></label><label>Subjudul persis<input id="imageSubtitle" maxlength="120"></label></div></details>
-<div class="prompt"><textarea id="input" placeholder="Tuliskan ide atau naskah di sini..."></textarea><div class="buttons"><input id="upload" type="file" hidden><button id="generate" class="primary">✦ Buat Otomatis</button><button id="stop" class="secondary" hidden>■ Stop</button><button id="download" class="secondary" disabled>↓ Unduh</button><button id="copy" class="secondary" disabled>Salin</button><button id="clear" class="secondary">Bersihkan</button></div></div></div></section></main></div>
+<!doctype html>
+<html lang="id">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#0d241a">
+<title>Prompt Kilat Studio · AHIM AI</title>
+<style>
+:root{color-scheme:dark;--bg:#091a13;--surface:#102b1e;--card:#153827;--line:#39634a;--text:#f1f7f0;--muted:#bdd0bd;--gold:#f3d997;--green:#78d8a1;--danger:#ffb5a9}
+*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 40% 0%,#1b4931 0%,#0b2117 46%,#081711 100%);color:var(--text);font:15px/1.55 system-ui,-apple-system,Segoe UI,Arial,sans-serif;min-height:100dvh}
+a{color:var(--gold)}button,select,input,textarea{font:inherit}button{cursor:pointer}button:disabled{opacity:.5;cursor:not-allowed}
+.topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;padding:12px clamp(14px,4vw,42px);border-bottom:1px solid var(--line);background:#0c2419d9;position:sticky;top:0;z-index:8;backdrop-filter:blur(14px)}
+.brand{display:flex;align-items:center;gap:11px;min-width:0}.brandmark{display:grid;place-items:center;background:#f2d795;color:#13321e;border-radius:11px;width:40px;height:40px;font-weight:900;font-size:22px}.brandstrong{display:block;font-size:16px;font-weight:800;color:var(--gold);letter-spacing:.2px}.brandsub{display:block;font-size:11px;color:var(--muted)}
+.toplinks{display:flex;align-items:center;gap:11px;flex-wrap:wrap}.toplinks a{font-weight:700;white-space:nowrap;text-decoration:none;border:1px solid #607956;border-radius:9px;padding:8px 12px;font-size:13px}.toplinks small{color:var(--muted)}
+.shell{width:min(1180px,calc(100% - 26px));margin:25px auto 38px}
+.hero{padding:25px clamp(12px,3vw,28px) 20px;border:1px solid #4b7958;border-radius:22px;background:linear-gradient(117deg,#173f2b,#103321 60%,#233f27);box-shadow:0 20px 48px #04110a77}
+.eyebrow{color:var(--green);font-size:12px;font-weight:750;text-transform:uppercase;letter-spacing:1.8px}
+.hero h1{font-size:clamp(26px,5vw,42px);line-height:1.12;letter-spacing:-1px;margin:8px 0}.hero h1 span{color:var(--gold)}.hero p{margin:0;max-width:780px;color:#d9e7db}
+.metrics{display:flex;gap:10px;flex-wrap:wrap;margin-top:18px}.metric{border:1px solid #456f52;padding:5px 11px;border-radius:99px;color:#cde6d2;background:#082b1b69;font-size:12px}
+.workspace{margin-top:17px;display:grid;grid-template-columns:minmax(0,1fr) minmax(0,.95fr);gap:16px;align-items:start}
+.panel{background:#102b1f;border:1px solid #456f53;border-radius:18px;padding:22px;min-width:0;box-shadow:0 12px 32px #020a0566}
+.heading{display:flex;justify-content:space-between;align-items:start;gap:10px}.heading h2{margin:0;font-size:20px;color:var(--gold)}.hint{color:var(--muted);font-size:13px}.heading p{margin:4px 0 0}.field{margin-top:15px}.field>label,.field>span.label{font-size:13px;display:block;color:#def3e2;margin-bottom:6px;font-weight:650}
+.grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+select,input[type=text],input[type=url],textarea{display:block;width:100%;border:1px solid #527660;border-radius:10px;background:#091d14;color:#f7fff7;padding:11px 12px;outline:none}
+select:focus,input:focus,textarea:focus{border-color:var(--gold);box-shadow:0 0 0 2px #d4b86f44}
+textarea{resize:vertical;min-height:138px;max-height:420px}
+.filecontrol{border:1px dashed #64916b;padding:11px;background:#0a2418;border-radius:10px;color:var(--muted)}
+.small-note{font-size:12px;color:#c3cfbc;margin-top:6px}
+.actions{display:flex;flex-wrap:wrap;gap:9px;margin-top:18px}
+button{border:1px solid #567961;background:#1e4931;color:var(--text);border-radius:10px;padding:11px 16px;font-weight:700}
+button:hover:not(:disabled){filter:brightness(1.12)}button.primary{background:linear-gradient(135deg,#f8dfa4,#e2bd6f);border-color:#f8dfa4;color:#14251a;font-weight:850}
+button.outline{background:#112b1e;color:#e7f5e8}.subline{margin-top:13px;display:flex;gap:9px;flex-wrap:wrap;align-items:center}
+.status{font-size:13px;color:var(--gold);white-space:pre-wrap;overflow-wrap:anywhere;min-height:24px;margin-top:13px}
+#result{min-height:205px}.placeholder{display:flex;min-height:220px;align-items:center;justify-content:center;flex-direction:column;text-align:center;color:#c6d4c7;gap:7px}.placeholder b{font-size:50px;color:var(--gold)}.result-text{white-space:pre-wrap;overflow-wrap:anywhere;line-height:1.75;font-size:14px}.result-text h3{margin:0;color:var(--gold)}
+#result img{display:block;max-width:100%;max-height:720px;object-fit:contain;margin:12px auto;border-radius:12px;border:1px solid #628565}#result audio,#result video{display:block;width:100%;margin:12px auto;border-radius:12px}
+#offer{margin-top:15px;border:1px solid #9b8550;background:#302a1b;padding:15px;border-radius:12px}#offer strong{font-size:17px;color:#ffdf98}#offer p{margin:6px 0 12px}.source{padding:9px;border:1px solid #476b52;background:#102a1d;border-radius:10px;margin-top:10px}
+.variation-grid{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}.variation{border:1px solid #527660;border-radius:12px;padding:10px;background:#0c2419}.variation b{display:block;color:#ffdfa0}.variation img{max-height:300px!important}.variation a{display:inline-block;margin-top:8px;font-weight:750}.footer{margin:16px auto;text-align:center;font-size:12px;color:#a8c6ad;max-width:900px}
+.busy{opacity:.78}input[type=file]{max-width:100%;font-size:13px}
+.sr{position:absolute;left:-10000px}[hidden]{display:none!important}
+@media(max-width:850px){.workspace{grid-template-columns:1fr}.shell{margin-top:14px}.hero{padding:19px}.panel{padding:16px}}
+@media(max-width:520px){.variation-grid{grid-template-columns:1fr}.topbar{padding:10px}.brandstrong{font-size:13px}.brandsub,.toplinks small{display:none}.toplinks a{padding:7px 9px;font-size:12px}.shell{width:calc(100% - 16px)}.grid{grid-template-columns:1fr}.hero h1{font-size:29px}.actions button{flex:1 1 auto}.metric{font-size:11px}}
+@media print{.topbar,.hero,.input-panel,.actions,.footer,#offer,.status,.subline{display:none!important}.shell,.workspace,.panel{width:100%;margin:0;padding:0;box-shadow:none;border:0;display:block}body{background:#fff;color:#000}.result-text{color:#000;font-size:12pt}}
+</style>
+</head>
+<body>
+<header class="topbar">
+ <div class="brand"><div class="brandmark">✦</div><div><strong class="brandstrong">AHIM AI STUDIO</strong><span class="brandsub">Prompt Kilat · All-in-One Generator</span></div></div>
+ <div class="toplinks"><small id="providerStatus">Memeriksa mesin AI...</small><a href="/agensi.html" title="Akun dan pustaka Agensi">🧩 Agensi</a></div>
+</header>
+<div class="shell">
+ <section class="hero">
+  <div class="eyebrow">Satu ruang kerja · Beragam hasil nyata</div>
+  <h1>Prompt Kilat, <span>Langsung Jadi.</span></h1>
+  <p>Tuliskan ide, lalu Generate. AHIM memilih jalur yang sesuai untuk membuat gambar, materi, audio, video MP4, atau analisis berkas. Tidak perlu berpindah menu.</p>
+  <div class="metrics"><span class="metric">✦ Gambar & desain</span><span class="metric">🎬 Video MP4 + suara</span><span class="metric">♫ Voice over</span><span class="metric">▤ Materi & LKPD</span><span class="metric">◉ Analisis berkas</span></div>
+ </section>
+ <div class="workspace">
+  <section class="panel input-panel" aria-labelledby="inputTitle">
+   <div class="heading"><div><h2 id="inputTitle">✦ Buat Karya</h2><p class="hint">Satu ide, satu tombol utama.</p></div></div>
+   <div class="field"><label for="idea">Ide atau perintah</label>
+    <textarea id="idea" maxlength="12000" placeholder="Contoh: Buat poster edukasi tentang menjaga kebersihan sekolah, warna hijau emas, teks 'Sekolah Bersih, Belajar Nyaman'." required></textarea>
+   </div>
+   <div class="grid">
+    <div class="field"><label for="kind">Jenis hasil</label><select id="kind">
+     <option value="auto" selected>✦ Otomatis dari ide</option>
+     <optgroup label="Gambar & Desain"><option>Gambar AI</option><option>Poster</option><option>Infografis</option><option>Banner</option><option>Feed IG</option><option>Cover Buku</option><option>Sertifikat</option><option>Brosur</option><option>Logo</option><option>Komik</option><option>Mockup</option></optgroup>
+     <optgroup label="Video & Audio"><option>Video AI</option><option>Gambar ke Video</option><option>Suara MP3</option></optgroup>
+     <optgroup label="Konten & Pendidikan"><option>Artikel</option><option>Materi Pelajaran</option><option>Rangkuman</option><option>LKPD</option><option>Worksheet</option><option>Slide</option><option>Chat AI</option><option>Prompt Sistem AI</option></optgroup>
+     <optgroup label="Analisis media"><option>Analisis Gambar</option><option>Transkripsi Audio</option><option>Analisis Video</option></optgroup>
+    </select></div>
+    <div class="field"><label for="style">Gaya</label><select id="style">
+     <option>Islami Profesional</option><option>Minimalis Modern</option><option>Pastel Cute</option><option>Kawaii</option><option>Chibi</option><option>Clay 3D</option><option>Vibrant</option><option>Watercolor</option><option>Cinematic</option><option>Retro</option><option>Luxury</option>
+    </select></div>
+    <div class="field"><label for="ratio">Rasio desain / video</label><select id="ratio">
+     <option>9:16</option><option>1:1</option><option>4:5</option><option>16:9</option><option>A4 Portrait</option><option>A4 Landscape</option>
+    </select></div>
+    <div class="field"><label for="language">Bahasa hasil</label><select id="language"><option>Indonesia</option><option>English</option><option>Arab</option><option>Sunda</option></select></div>
+    <div class="field" id="promptModeField"><label for="promptMode">Mode produksi</label><select id="promptMode"><option>Profesional Lengkap</option><option>Auto 5 Gaya</option><option>Guru-Friendly</option><option>Auto Layout</option></select><div class="small-note">Auto 5 Gaya menghasilkan 5 gambar asli untuk desain atau 5 versi konten untuk teks.</div></div>
+   </div>
+   <div class="field" id="videoModeField" hidden><label for="videoMode">Suara dalam video</label><select id="videoMode"><option value="sound" selected>🔊 Dengan suara · Kling v3.0 · 720p</option><option value="silent">🔇 Tanpa suara · Seedance Lite · 480p</option></select><div class="small-note">Video 5 detik. Harga harus diperiksa dan disetujui sebelum setiap render. Audio asli bergantung pada hasil model.</div></div>
+   <div class="field" id="sourceUrlField" hidden><label for="sourceUrl">URL gambar referensi (HTTPS)</label><input id="sourceUrl" type="url" placeholder="https://domain-anda.com/gambar.jpg"><div class="small-note">Untuk Gambar ke Video diperlukan URL gambar yang bisa diakses penyedia Agensi. Unggah gambar lokal belum didukung pada jalur ini.</div></div>
+   <div class="field" id="exactField" hidden><label for="exactTitle">Teks utama pada desain (opsional, disalin persis)</label><input id="exactTitle" type="text" maxlength="160" placeholder="Judul yang wajib terbaca"><div class="small-note">Teks ini ditambahkan sebagai lapisan grafis setelah gambar AI dibuat, agar ejaan tetap sesuai.</div></div>
+   <div class="field"><label for="upload">Lampiran gambar, audio, atau video (opsional)</label><div class="filecontrol"><input id="upload" type="file" accept="image/*,audio/*,video/*"></div><div class="small-note" id="uploadHelp">Lampiran untuk analisis: gambar hingga 7 MB (akan dikompresi), audio maksimal 2,5 MB, video hingga 7 MB (hanya satu frame).</div></div>
+   <div class="actions"><button id="generate" type="button" class="primary">✦ Generate Hasil</button><button id="clear" type="button" class="outline">Bersihkan</button></div>
+   <div class="status" id="status" role="status" aria-live="polite">Siap. Pilih Otomatis atau tentukan jenis hasil jika ingin lebih spesifik.</div>
+  </section>
+  <section class="panel" aria-labelledby="resultTitle">
+   <div class="heading"><div><h2 id="resultTitle">Hasil Karya</h2><p class="hint" id="resultHint">Hasil asli muncul di sini, bukan hanya prompt.</p></div></div>
+   <div id="result"><div class="placeholder"><b>✧</b><strong>Ide singkat. Hasil langsung.</strong><span>Gambar, MP4, MP3, materi, dan analisis disajikan di satu tempat.</span></div></div>
+   <div id="offer" hidden><strong id="offerPrice"></strong><p class="hint" id="offerDescription">Setiap video berbayar dari saldo Agensi. Proses hanya berjalan setelah Anda menyetujui penawaran ini.</p><button id="approveVideo" type="button" class="primary">✓ Setuju Biaya & Buat MP4</button></div>
+   <div class="actions"><button id="download" type="button" disabled>↓ Unduh Hasil</button><button id="copy" type="button" disabled>⧉ Salin Teks</button><button id="print" type="button" disabled>▤ Cetak / PDF</button><button id="checkJob" type="button" hidden>⟳ Cek Progres Video</button><button id="connectAgensi" type="button" hidden>🔗 Izinkan Agensi untuk Video</button></div>
+   <div id="resultStatus" class="status" role="status" aria-live="polite"></div>
+  </section>
+ </div>
+ <div class="footer">AHIM Prompt Kilat Studio · Generasi gambar dan teks melalui Cloudflare; video melalui Agensi dengan persetujuan biaya; audio melalui Sonex. Generator gambar mungkin belum merender tipografi kompleks sempurna. Koneksi provider dan hasil bergantung pada layanan masing-masing.</div>
+</div>
 <script>
-const $=id=>document.getElementById(id);const modes=[["promptkilat","✨ Prompt Kilat AI","16 jenis prompt, 11 gaya, Auto 5 Gaya."],["chat","✦ Text → Text","Asisten AI Cloudflare."],["image","▧ Text → Image","Generator gambar dengan FLUX."],["vision","◉ Image → Text","Analisis gambar AI."],["tts","♫ Text → Voice","Suara Indonesia, pemutar, dan unduh MP3."],["asr","♬ Voice → Text","Transkripsi rekaman."],["videotext","◧ Video → Text","Ringkasan satu frame video."],["video","▣ Text → Video","AI video nyata melalui Cloudflare Grok Imagine. Biaya sesuai tarif provider."],["imagevideo","▤ Image → Video","Image-to-Video belum diaktifkan."]];let mode="promptkilat",blob=null,filename="",copyText="",blobURL="",availableVoices=[],deviceVoices=[],sonex=false,videoEnabled=false;const mobile=()=>matchMedia("(max-width:790px)").matches;function sidebar(open){$("layout").classList.toggle("closed",!open)}sidebar(!mobile());$("menu").onclick=()=>sidebar($("layout").classList.contains("closed"));$("veil").onclick=()=>sidebar(false);for(const m of modes){const b=document.createElement("button");b.textContent=m[1];b.dataset.mode=m[0];b.onclick=()=>{setMode(m[0]);if(mobile())sidebar(false)};$("navitems").append(b)}function reset(){if(blobURL){URL.revokeObjectURL(blobURL);blobURL=""}if("speechSynthesis" in window)speechSynthesis.cancel();$("stop").hidden=true;$("output").replaceChildren();$("empty").hidden=false;blob=null;copyText="";filename="";$("download").disabled=$("copy").disabled=true}
-function setMode(m){mode=m;const x=modes.find(x=>x[0]===m);$("title").textContent=x[1];$("description").textContent=x[2];$("promptSettings").hidden=m!=="promptkilat";$("voiceSettings").hidden=m!=="tts";$("imageSettings").hidden=m!=="image";$("videoSettings").hidden=m!=="video";$("upload").hidden=!["vision","asr","videotext"].includes(m);$("upload").accept=m==="vision"?"image/*":m==="asr"?"audio/*":"video/*";$("generate").textContent=m==="tts"?"♫ Buat Suara":m==="video"?"🎬 Buat Video":"✦ Buat Otomatis";document.querySelectorAll("#navitems button").forEach(b=>b.classList.toggle("active",b.dataset.mode===m));reset();$("generate").disabled=m==="video"&&!videoEnabled;$("status").textContent=m==="video"&&!videoEnabled?"Video MP4 belum diaktifkan pada lingkungan ini. Anda tetap bisa membuat prompt video di menu Agensi.":"Siap."}setMode("promptkilat");
-function voicePicker(){const s=$("voiceId");s.replaceChildren();if($("engine").value==="sonex"){let o=document.createElement("option");o.value="";o.textContent="Suara standar Sonex";s.append(o);availableVoices.forEach(v=>{let o=document.createElement("option");o.value=v.id;o.textContent=v.name;s.append(o)});$("voiceHelp").textContent=sonex?"API key terkonfigurasi; MP3 dapat dibuat jika provider merespons dengan sukses.":"SONEX_API_KEY belum dikonfigurasi."}else{let a=deviceVoices.filter(v=>v.lang.toLowerCase().startsWith($("voiceLang").value.substring(0,2).toLowerCase()));for(const v of a){let o=document.createElement("option");o.value=v.voiceURI;o.textContent=v.name+" ("+v.lang+")";s.append(o)}if(!a.length){let o=document.createElement("option");o.value="";o.textContent="Tidak ada suara perangkat";s.append(o)}$("voiceHelp").textContent="Suara browser tidak memiliki unduhan MP3."}}$("engine").onchange=voicePicker;$("voiceLang").onchange=voicePicker;
-function loadVoice(){deviceVoices="speechSynthesis" in window?speechSynthesis.getVoices():[];voicePicker()}if("speechSynthesis" in window){speechSynthesis.onvoiceschanged=loadVoice;loadVoice()}
-(async()=>{try{const r=await fetch("/api/health",{cache:"no-store"}),j=await r.json();sonex=!!j.sonexConfigured;videoEnabled=!!j.videoEnabled;$("generate").disabled=mode==="video"&&!videoEnabled;if(mode==="video"&&!videoEnabled)$("status").textContent="Mode MP4 masih terkunci; fitur prompt video tetap tersedia.";$("videoStatus").textContent=videoEnabled?"Video AI siap diuji. Video 5 detik 480p, kode akses pemilik dan persetujuan per render diperlukan.":"Video AI belum diaktifkan oleh pemilik. API tidak akan menagih saat terkunci.";$("health").textContent="Cloudflare "+(j.cloudflareConfigured?"terkonfigurasi":"belum")+" · Sonex "+(sonex?"terkonfigurasi":"belum");voicePicker()}catch(e){$("health").textContent="Status provider belum tersedia"}try{const r=await fetch("/api/voices"),j=await r.json();if(Array.isArray(j.voices))availableVoices=j.voices;if(!r.ok)$("voiceHelp").textContent=j.error||"Gagal mengambil daftar suara";voicePicker()}catch(e){$("voiceHelp").textContent="Tidak dapat mengambil daftar suara Sonex."}})();
-const asData=f=>new Promise((ok,bad)=>{const r=new FileReader();r.onload=()=>ok(r.result);r.onerror=bad;r.readAsDataURL(f)});
-async function videoFrame(file){let url=URL.createObjectURL(file),v=document.createElement("video");try{v.preload="auto";v.muted=true;v.src=url;await new Promise((ok,bad)=>{v.onloadedmetadata=ok;v.onerror=()=>bad(Error("Video tidak terbaca"))});v.currentTime=Math.min(1,Math.max(0,v.duration/2));await new Promise((ok,bad)=>{v.onseeked=ok;v.onerror=()=>bad(Error("Frame gagal diambil"))});let c=document.createElement("canvas"),k=Math.min(1,1024/v.videoWidth);c.width=Math.round(v.videoWidth*k);c.height=Math.round(v.videoHeight*k);c.getContext("2d").drawImage(v,0,0,c.width,c.height);return c.toDataURL("image/jpeg",.8)}finally{URL.revokeObjectURL(url)}}
-function fitText(ctx,s,width){let lines=[],line="";for(const w of s.split(/\s+/)){let t=line?line+" "+w:w;if(line&&ctx.measureText(t).width>width){lines.push(line);line=w}else line=t}if(line)lines.push(line);return lines}
-async function labeledImage(file){let title=$("imageTitle").value.trim(),sub=$("imageSubtitle").value.trim();if(!title&&!sub)return{file,name:"AHIM-image.jpg"};let img=await createImageBitmap(file),c=document.createElement("canvas");c.width=img.width;c.height=img.height;let ctx=c.getContext("2d");ctx.drawImage(img,0,0);let h=Math.round(img.height*.34);ctx.fillStyle="#071a12e8";ctx.fillRect(0,img.height-h,img.width,h);ctx.textAlign="center";ctx.textBaseline="middle";let size=Math.max(15,Math.round(img.width*.05));ctx.font="bold "+size+"px sans-serif";let lines=title?fitText(ctx,title,img.width*.89):[];ctx.fillStyle="#ffdf98";let y=img.height-h+size;for(let l of lines){ctx.fillText(l,img.width/2,y);y+=size*1.2}ctx.fillStyle="#fff";ctx.font=Math.max(13,Math.round(size*.65))+"px sans-serif";for(let l of sub?fitText(ctx,sub,img.width*.89):[]){ctx.fillText(l,img.width/2,y);y+=size*.8}let output=await new Promise(ok=>c.toBlob(ok,"image/png"));return{file:output,name:"AHIM-image-text.png"}}
-function speak(text){if(!("speechSynthesis" in window))throw Error("Browser tidak mendukung suara perangkat.");const voice=deviceVoices.find(v=>v.voiceURI===$("voiceId").value);if(!voice)throw Error("Tidak ada suara perangkat untuk bahasa terpilih.");let u=new SpeechSynthesisUtterance(text);u.voice=voice;u.lang=voice.lang;u.rate=Number($("speed").value);$("output").textContent="🔊 Memutar "+voice.name+"\n\n"+text;$("empty").hidden=true;$("stop").hidden=false;u.onend=()=>{$("stop").hidden=true;$("status").textContent="Pemutaran selesai. Unduh MP3 memerlukan Sonex."};u.onerror=e=>{$("stop").hidden=true;$("status").textContent="Kesalahan suara: "+e.error};speechSynthesis.speak(u)}
-$("stop").onclick=()=>{if("speechSynthesis" in window)speechSynthesis.cancel();$("stop").hidden=true;$("status").textContent="Pemutaran dihentikan"};
-$("generate").onclick=async()=>{let prompt=$("input").value.trim(),f=$("upload").files[0];if(mode==="imagevideo"){$("status").textContent="Image-to-Video belum tersedia.";return}if(mode==="video"){if(!videoEnabled){$("status").textContent="Video MP4 masih terkunci oleh backend. Gunakan AI Video Prompt Director atau hubungi admin.";return}if(!$("videoConsent").checked){$("status").textContent="Centang persetujuan biaya sebelum menjalankan model video.";return}if(!$("videoCode").value){$("status").textContent="Masukkan kode akses video dari pemilik aplikasi.";return}}if(!prompt&&!["vision","asr","videotext"].includes(mode)){$("status").textContent="Tulis naskah atau ide terlebih dahulu.";return}if(["vision","asr","videotext"].includes(mode)&&!f){$("status").textContent="Unggah media dahulu.";return}if(f&&f.size>7*1024*1024){$("status").textContent="Maksimal 7MB.";return}reset();if(mode==="tts"&&$("engine").value==="browser"){try{speak(prompt)}catch(e){$("status").textContent=e.message}return}if(mode==="promptkilat")prompt=JSON.stringify({ide:prompt,jenis:$("kind").value,gaya:$("style").value,rasio:$("ratio").value,bahasa:$("language").value,mode:$("promptMode").value,durasi_detik:Number($("duration").value)});let body={task:mode,prompt};if(mode==="tts"){body.provider="sonex";body.voice_id=$("voiceId").value;body.speed=Number($("speed").value)}if(mode==="video"){body.duration=Number($("videoDuration").value);body.aspect_ratio=$("videoRatio").value;body.resolution=$("videoResolution").value;body.access_code=$("videoCode").value;body.confirm_cost=true}$("generate").disabled=true;$("empty").hidden=true;$("status").textContent="Memproses...";try{if(mode==="vision")body.image=await asData(f);if(mode==="asr")body.audio=await asData(f);if(mode==="videotext")body.image=await videoFrame(f);let r=await fetch(mode==="video"?"/api/video":"/api/ai",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(body)});const type=r.headers.get("content-type")||"";if(!r.ok){const x=type.includes("json")?await r.json():{error:await r.text()};throw Error(x.error||"HTTP "+r.status)}if(mode==="video"){let j=await r.json();if(j.status==="processing")throw Error("Video masih diproses di Cloudflare. Permintaan belum selesai. "+(j.message||""));if(!j.video_url)throw Error("Provider tidak mengembalikan URL video.");let u=new URL(j.video_url);if(u.protocol!=="https:")throw Error("URL video tidak aman.");const video=document.createElement("video");video.src=u.href;video.controls=true;video.playsInline=true;video.style.width="100%";video.style.maxHeight="62vh";$("output").append(video);const link=document.createElement("a");link.href=u.href;link.target="_blank";link.rel="noopener noreferrer";link.textContent="Buka MP4 / Simpan video dari browser";link.style.color="#f2d68a";$("output").append(link);$("status").textContent="Video berhasil dihasilkan. Untuk mengunduh, buka tautan MP4.";return}if(type.startsWith("audio/")||type.startsWith("image/")){blob=await r.blob();if(blob.size<150)throw Error("File kosong");filename="AHIM-"+mode+(type.startsWith("audio/")?".mp3":".jpg");if(mode==="image"){const x=await labeledImage(blob);blob=x.file;filename=x.name}blobURL=URL.createObjectURL(blob);const el=document.createElement(type.startsWith("audio/")?"audio":"img");el.src=blobURL;if(el.tagName==="AUDIO")el.controls=true;$("output").append(el)}else{let j=await r.json();copyText=j.text||JSON.stringify(j);blob=new Blob([copyText],{type:"text/plain;charset=utf-8"});filename="AHIM-"+mode+".txt";$("output").textContent=copyText}$("download").disabled=false;$("copy").disabled=!copyText;$("status").textContent="Berhasil. Hasil siap diunduh.";$("results").scrollTop=0}catch(e){$("status").textContent="Gagal: "+e.message}finally{$("generate").disabled=false}};
-$("download").onclick=()=>{if(!blob)return;let u=URL.createObjectURL(blob),a=document.createElement("a");a.href=u;a.download=filename;a.click();setTimeout(()=>URL.revokeObjectURL(u),2000)};$("copy").onclick=async()=>{if(copyText){try{await navigator.clipboard.writeText(copyText);$("status").textContent="Teks disalin."}catch(e){$("status").textContent="Gagal menyalin."}}};$("clear").onclick=()=>{$("input").value="";$("upload").value="";reset();$("status").textContent="Siap."};
-</script></body></html>
+'use strict';
+const $=id=>document.getElementById(id);
+const VISUAL=new Set(['Gambar AI','Poster','Infografis','Banner','Feed IG','Cover Buku','Sertifikat','Brosur','Logo','Komik','Mockup']);
+const TEXT=new Set(['Artikel','Materi Pelajaran','Rangkuman','LKPD','Worksheet','Slide','Chat AI','Prompt Sistem AI']);
+const ANALYZE={'Analisis Gambar':'vision','Transkripsi Audio':'asr','Analisis Video':'videotext'};
+const state={blob:null,objectUrl:null,variations:[],text:'',docTitle:'',filename:'',externalUrl:'',quote:null,job:false,busy:false,connected:false,videoAuthorized:false,sonex:false};
+function msg(text){$('status').textContent=text;}
+function resultMsg(text){$('resultStatus').textContent=text;}
+function httpError(data,status){return Error(data&&data.error?data.error:'HTTP '+status);}
+async function postJSON(url,data){
+ const res=await fetch(url,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(data),credentials:'same-origin',cache:'no-store'});
+ if(!res.ok){let j;try{j=await res.json()}catch{j=null}throw httpError(j,res.status)}
+ return res;
+}
+function clearQuote(){state.quote=null;$('offer').hidden=true;$('approveVideo').disabled=true;}
+function clearResults(){
+ if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl=null}
+ for(const v of state.variations)URL.revokeObjectURL(v.url);state.variations=[];
+ state.blob=null;state.filename='';state.text='';state.docTitle='';state.externalUrl='';state.job=false;
+ $('result').replaceChildren();$('download').disabled=true;$('copy').disabled=true;$('print').disabled=true;
+ $('download').textContent='↓ Unduh Hasil';$('copy').textContent='⧉ Salin Teks';
+ $('checkJob').hidden=true;$('connectAgensi').hidden=true;clearQuote();resultMsg('');
+}
+function clearAll(){clearResults();$('idea').value='';$('exactTitle').value='';$('sourceUrl').value='';$('upload').value='';msg('Siap untuk ide berikutnya.');$('result').innerHTML='<div class="placeholder"><b>✧</b><strong>Masukkan ide untuk mulai berkarya.</strong></div>'}
+function lock(b){state.busy=b;$('generate').disabled=b;$('approveVideo').disabled=b||!state.quote;document.body.classList.toggle('busy',b);}
+function notice(text){const x=document.createElement('div');x.className='source';x.textContent=text;$('result').append(x);return x}
+function insertHeading(text){const h=document.createElement('h3');h.textContent=text;h.style.color='#f5dba0';$('result').append(h);}
+function label(text){const el=document.createElement('p');el.className='hint';el.textContent=text;$('result').append(el);}
+async function clipboardText(text){
+ if(typeof text!=='string'||!text.length)throw Error('Tidak ada teks yang dapat disalin.');
+ if(navigator.clipboard?.writeText){
+  try{await navigator.clipboard.writeText(text);return;}catch{/* fallback for restricted mobile browsers */}
+ }
+ const field=document.createElement('textarea');field.value=text;
+ field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';
+ field.style.top='0';field.style.left='0';document.body.append(field);
+ const previous=document.activeElement;
+ try{field.focus();field.select();field.setSelectionRange(0,field.value.length);
+  if(!document.execCommand?.('copy'))throw Error('Browser menolak izin clipboard. Coba pilih teks hasil secara manual.');
+ }finally{field.remove();if(previous?.focus)previous.focus();}
+}
+async function copyImage(blob){
+ if(!blob||!blob.type.startsWith('image/'))throw Error('Gambar belum tersedia.');
+ if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined')
+  throw Error('Browser ini belum mendukung salin gambar. Gunakan Unduh PNG, lalu bagikan gambar dari galeri.');
+ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+}
+async function copyResult(){
+ try{
+  if(state.text){await clipboardText(state.text);resultMsg('Teks berhasil disalin.');return;}
+  if(state.externalUrl){await clipboardText(state.externalUrl);resultMsg('Tautan video berhasil disalin.');return;}
+  const file=state.variations[0]?.blob||state.blob;
+  if(file?.type.startsWith('image/')){await copyImage(file);resultMsg('Gambar PNG berhasil disalin ke clipboard.');return;}
+  resultMsg('Hasil ini tidak dapat disalin langsung. Silakan gunakan tombol Unduh.');
+ }catch(e){resultMsg('Gagal menyalin: '+e.message);}
+}
+async function downloadBlob(blob,filename){
+ if(!blob||!blob.size)throw Error('Berkas kosong.');
+ if(/iPad|iPhone|iPod/i.test(navigator.userAgent||'')&&typeof File!=='undefined'&&navigator.share){
+  const f=new File([blob],filename,{type:blob.type||'application/octet-stream'});
+  if(navigator.canShare?.({files:[f]})){
+   try{await navigator.share({files:[f],title:filename});resultMsg('Pilih Simpan ke File atau aplikasi tujuan dari menu berbagi.');return;}
+   catch(e){if(e.name==='AbortError'){resultMsg('Penyimpanan dibatalkan.');return;}}
+  }
+ }
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');link.href=url;link.download=filename;
+ link.style.display='none';document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+ resultMsg('Unduhan '+filename+' telah diminta. Periksa folder Download atau izin unduhan browser.');
+}
+function crc32(bytes){
+ let crc=0xffffffff;
+ for(let i=0;i<bytes.length;i++){crc^=bytes[i];for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}
+ return (crc^0xffffffff)>>>0;
+}
+async function packageImagesZip(images){
+ if(!Array.isArray(images)||!images.length||images.length>20)throw Error('Jumlah berkas ZIP tidak valid.');
+ const enc=new TextEncoder();const parts=[],directory=[];let offset=0,directoryBytes=0;
+ for(const item of images){
+  const name=enc.encode(item.name||'gambar.png');const bytes=new Uint8Array(await item.blob.arrayBuffer());
+  if(name.length>65535||bytes.length>0xffffffff)throw Error('Berkas terlalu besar untuk ZIP.');
+  const crc=crc32(bytes),size=bytes.length;
+  const local=new Uint8Array(30),lv=new DataView(local.buffer);
+  lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint32(14,crc,true);
+  lv.setUint32(18,size,true);lv.setUint32(22,size,true);lv.setUint16(26,name.length,true);
+  const center=new Uint8Array(46),cv=new DataView(center.buffer);
+  cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+  cv.setUint32(16,crc,true);cv.setUint32(20,size,true);cv.setUint32(24,size,true);
+  cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);
+  parts.push(local,name,bytes);directory.push(center,name);
+  offset+=local.length+name.length+size;directoryBytes+=center.length+name.length;
+ }
+ const end=new Uint8Array(22),view=new DataView(end.buffer);
+ view.setUint32(0,0x06054b50,true);view.setUint16(8,images.length,true);view.setUint16(10,images.length,true);
+ view.setUint32(12,directoryBytes,true);view.setUint32(16,offset,true);
+ return new Blob([...parts,...directory,end],{type:'application/zip'});
+}
+async function downloadResult(){
+ if(state.variations.length){
+  try{resultMsg('Menyiapkan paket ZIP '+state.variations.length+' gambar...');
+   const zip=await packageImagesZip(state.variations);await downloadBlob(zip,'AHIM-5-Gaya.zip');
+  }catch(e){resultMsg('Gagal mengunduh ZIP: '+e.message);}return;
+ }
+ if(state.externalUrl){
+  try{
+   const url=new URL(state.externalUrl);
+   if(url.protocol!=='https:')throw Error('Alamat video tidak aman.');
+   if(url.hostname.endsWith('.supabase.co')&&url.pathname.includes('/storage/v1/object/sign/'))url.searchParams.set('download','AHIM-Video.mp4');
+   const a=document.createElement('a');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';
+   a.textContent='';document.body.append(a);a.click();a.remove();
+   resultMsg('Membuka berkas MP4 dari Agensi. Jika diputar di browser, gunakan menu Simpan/Download video.');
+  }catch(e){resultMsg('Tidak bisa membuka unduhan video: '+e.message);}return;
+ }
+ if(state.text){
+  const title=state.docTitle||'Hasil AI';
+  const filename=state.filename||'AHIM-Hasil.docx';
+  const copy=state.text;
+  $('download').disabled=true;
+  resultMsg('Menyusun dokumen Word .docx asli...');
+  try{
+   const response=await postJSON('/api/docx',{title,text:copy});
+   const type=response.headers.get('content-type')||'';
+   if(!type.includes('application/vnd.openxmlformats-officedocument.wordprocessingml.document'))
+    throw Error('Server tidak mengembalikan dokumen Word DOCX.');
+   const documentFile=await response.blob();
+   if(documentFile.size<500||!documentFile.type.includes('officedocument.wordprocessingml.document'))
+    throw Error('Berkas Word kosong atau tidak valid.');
+   await downloadBlob(documentFile,filename);
+  }catch(e){resultMsg('Gagal mengunduh DOCX: '+e.message);}
+  finally{$('download').disabled=false;}
+  return;
+ }
+ if(!state.blob){resultMsg('Belum ada hasil yang dapat diunduh.');return;}
+ try{await downloadBlob(state.blob,state.filename||'AHIM-Hasil');}
+ catch(e){resultMsg('Gagal mengunduh: '+e.message);}
+}
+function textResult(text,titleName){
+ clearResults();state.text=text;state.docTitle=titleName||'Hasil AI';state.blob=null;state.filename='AHIM-'+(titleName||'hasil').replace(/[^a-z0-9_-]/gi,'-')+'.docx';
+ const p=document.createElement('div');p.className='result-text';p.textContent=text;$('result').append(p);
+ $('download').disabled=false;$('copy').disabled=false;$('print').disabled=false;
+ $('download').textContent='↓ Unduh Word (.docx)';$('copy').textContent='⧉ Salin Teks';
+ resultMsg('Konten akhir siap. Klik Unduh Word (.docx) untuk dokumen Microsoft Word asli yang dapat diedit; bukan HTML.');
+}
+function routeType(){
+ const v=$('kind').value;
+ if(VISUAL.has(v))return 'image';
+ if(TEXT.has(v))return 'text';
+ if(v==='Video AI')return 'video';
+ if(v==='Gambar ke Video')return 'imagevideo';
+ if(v==='Suara MP3')return 'tts';
+ if(ANALYZE[v])return ANALYZE[v];
+ const file=$('upload').files[0];
+ if(file){if(file.type.startsWith('image/'))return 'vision';if(file.type.startsWith('audio/'))return 'asr';if(file.type.startsWith('video/'))return 'videotext'}
+ const s=$('idea').value.toLowerCase();
+ if(/gambar.+jadi video|foto.+jadi video|image.to.video|animasikan foto|video dari gambar/.test(s))return 'imagevideo';
+ if(/transkrip|ubah audio menjadi teks|rekaman menjadi teks/.test(s))return 'asr';
+ if(/analisis gambar|jelaskan gambar|analisa foto/.test(s))return 'vision';
+ if(/analisis video|rangkum video|ringkasan video/.test(s))return 'videotext';
+ if(/suara|mp3|voice.?over|narasi audio|text.to.speech|tts/.test(s))return 'tts';
+ if(/video|mp4|cinematic motion|film pendek|animasi/.test(s))return 'video';
+ if(/artikel|rangkuman|merangkum|ringkas|materi|soal|lkpd|worksheet|slide|presentasi|teks|naskah|makalah|chat|jelaskan|tuliskan/.test(s))return 'text';
+ return 'image';
+}
+function fitUI(){
+ const task=routeType();
+ const kind=$('kind').value;
+ $('promptModeField').hidden=task==='video'||task==='imagevideo'||task==='tts'||task==='vision'||task==='videotext'||task==='asr';
+ $('videoModeField').hidden=!(task==='video'||task==='imagevideo');
+ $('sourceUrlField').hidden=task!=='imagevideo';
+ $('exactField').hidden=task!=='image';
+ $('uploadHelp').textContent=task==='imagevideo'?'Gambar ke Video membutuhkan URL HTTPS pada kolom di atas. Upload lokal belum tersedia untuk render video.':task==='videotext'?'Unggah video maksimal 7 MB: AHIM hanya memeriksa satu frame, bukan seluruh gerakan atau suara.':task==='image'?'Buat gambar dari teks. Lampiran referensi belum dapat dipakai untuk mengedit gambar.': 'Gambar dapat dikompresi otomatis, audio maksimal 2,5 MB, video hingga 7 MB hanya untuk satu frame.';
+ if(task==='vision')$('upload').accept='image/*';else if(task==='asr')$('upload').accept='audio/*';else if(task==='videotext')$('upload').accept='video/*';else $('upload').accept='image/*,audio/*,video/*';
+ $('generate').textContent=task==='video'||task==='imagevideo'?'🎬 Cek Harga & Buat Video':task==='tts'?'♫ Buat Suara MP3':task==='text'?'✦ Tulis Konten Lengkap':task==='image'?'▧ Buat Gambar Asli':'◉ Analisis Berkas';
+ if(kind==='auto')$('resultHint').textContent='Mode otomatis: '+({image:'gambar asli',video:'video MP4',imagevideo:'gambar menjadi video',text:'konten siap pakai',tts:'audio MP3',vision:'analisis gambar',asr:'transkripsi audio',videotext:'analisis satu frame video'}[task]||'hasil');
+ else $('resultHint').textContent='Jenis hasil: '+kind+'. Bukan hanya teks prompt.';
+ clearQuote();
+}
+function buildImagePrompt(idea,kind,styleOverride){
+ const desc=String(idea||'').trim();
+ const title=$('exactTitle').value.trim();
+ return [
+ 'Create the finished visual artwork, not a written prompt.',
+ 'Visual product: '+(kind==='auto'?'high quality image':kind)+'.',
+ 'Description: '+desc+'.',
+ 'Art direction: '+(styleOverride||$('style').value)+', polished graphic design, harmonious palette, strong focal point, professional composition, clean background, balanced spacing.',
+ 'Target composition: '+$('ratio').value+'. No unwanted watermarks or random lettering.',
+ $('promptMode').value==='Guru-Friendly'?'Clear educational imagery suitable for school-age learners.':'',
+ title?'Reserve clear space for this exact headline to be added by the graphic layer: '+title+'.':'No need to add arbitrary text.',
+ 'High clarity, coherent lighting, crisp details, tasteful typography space.'
+ ].join(' ');
+}
+const sizes={'9:16':[720,1280],'1:1':[1000,1000],'4:5':[800,1000],'16:9':[1280,720],'A4 Portrait':[848,1200],'A4 Landscape':[1200,848]};
+function canvasToBlob(canvas){return new Promise((resolve,reject)=>canvas.toBlob(b=>b?resolve(b):reject(Error('Ekspor gambar gagal.')),'image/png'));}
+function wrap(ctx,text,maxWidth){const words=String(text).split(/\s+/);const lines=[];let line='';for(const word of words){const next=line?line+' '+word:word;if(line&&ctx.measureText(next).width>maxWidth){lines.push(line);line=word}else line=next;}if(line)lines.push(line);return lines;}
+async function composeImage(blob){
+ const bitmap=await createImageBitmap(blob);
+ const size=sizes[$('ratio').value]||sizes['9:16'];const canvas=document.createElement('canvas');canvas.width=size[0];canvas.height=size[1];const ctx=canvas.getContext('2d');
+ const scale=Math.max(canvas.width/bitmap.width,canvas.height/bitmap.height);
+ const w=bitmap.width*scale,h=bitmap.height*scale;
+ ctx.drawImage(bitmap,(canvas.width-w)/2,(canvas.height-h)/2,w,h);
+ if(bitmap.close)bitmap.close();
+ const title=$('exactTitle').value.trim();
+ if(title){
+  const boxH=Math.max(165,Math.min(canvas.height*.32,340));
+  const gradient=ctx.createLinearGradient(0,canvas.height-boxH,0,canvas.height);gradient.addColorStop(0,'#071a10b0');gradient.addColorStop(1,'#041109f2');
+  ctx.fillStyle=gradient;ctx.fillRect(0,canvas.height-boxH,canvas.width,boxH);
+  let font=Math.max(25,Math.round(canvas.width*.051));let lines=[];
+  for(;font>=18;font-=2){ctx.font='800 '+font+'px system-ui,sans-serif';lines=wrap(ctx,title,canvas.width*.88);if(lines.length*font*1.22<boxH*.8)break;}
+  ctx.font='800 '+font+'px system-ui,sans-serif';ctx.fillStyle='#ffe6a9';ctx.textBaseline='middle';ctx.textAlign='center';
+  let y=canvas.height-boxH/2-(lines.length-1)*font*.59;
+  for(const line of lines){ctx.fillText(line,canvas.width/2,y,canvas.width*.9);y+=font*1.18;}
+ }
+ const output=await canvasToBlob(canvas);
+ return output;
+}
+async function imageResult(blob){
+ const output=await composeImage(blob);
+ clearResults();state.blob=output;state.filename='AHIM-Prompt-Kilat-Desain.png';state.objectUrl=URL.createObjectURL(output);
+ const img=document.createElement('img');img.src=state.objectUrl;img.alt='Hasil desain gambar AI';$('result').append(img);
+ const title=$('exactTitle').value.trim();
+ if(title)label('Judul ditambahkan sebagai lapisan grafis agar ejaannya persis.');
+ else label('Gambar dihasilkan oleh model FLUX. Rasio disesuaikan menggunakan pemotongan komposisi pada pratinjau.');
+ $('download').disabled=false;$('copy').disabled=false;
+ $('download').textContent='↓ Unduh PNG';$('copy').textContent='⧉ Salin Gambar';
+ resultMsg('Gambar siap. Klik Unduh PNG atau Salin Gambar.');
+}
+async function loadVideoStatus(){
+ try{const r=await fetch('/api/agensi?op=status',{credentials:'same-origin',cache:'no-store'});const j=await r.json();state.connected=!!j.connected;state.videoAuthorized=!!j.videoAuthorized;}
+ catch{state.connected=false;state.videoAuthorized=false;}
+}
+function videoData(idea,task){
+ const mode=task==='imagevideo'?'silent':$('videoMode').value;
+ const ratio=['16:9','9:16','1:1'].includes($('ratio').value)?$('ratio').value:'16:9';
+ return {prompt:idea,duration:5,aspect_ratio:ratio,resolution:mode==='sound'?'720p':'480p',video_mode:mode,image_url:task==='imagevideo'?$('sourceUrl').value.trim():undefined};
+}
+async function quoteVideo(idea,task){
+ await loadVideoStatus();
+ if(!state.connected||!state.videoAuthorized){
+  clearResults();notice('Video MP4 memerlukan izin akun Agensi. Hubungkan akun sekali, lalu kembali ke Prompt Kilat ini. Koneksi Agensi lain mungkin terputus.');
+  $('connectAgensi').hidden=false;resultMsg('Belum tersambung dengan izin video Agensi. Tidak ada render atau biaya.');
+  return;
+ }
+ const data=videoData(idea,task);
+ if(task==='imagevideo'&&!/^https:\/\/[^ ]+\.[^ ]+/.test(data.image_url||''))throw Error('Gambar ke Video membutuhkan URL gambar HTTPS yang dapat diakses publik.');
+ const res=await postJSON('/api/agensi?op=video-quote',data);const offer=await res.json();
+ if(!offer.quote_id||!(Number(offer.price_usd)>0))throw Error('Agensi tidak mengembalikan penawaran yang sah.');
+ clearResults();state.quote=offer;
+ $('offerPrice').textContent='US$ '+Number(offer.price_usd).toFixed(3)+' · '+offer.model+' · 5 detik';
+ $('offerDescription').textContent=offer.audio_requested?'Model Kling diminta membuat video dengan audio asli. Persetujuan Anda berlaku untuk SATU render dan saldo Agensi akan digunakan.':'Model Seedance menghasilkan video tanpa audio. Persetujuan Anda berlaku untuk SATU render dan saldo Agensi akan digunakan.';
+ $('offer').hidden=false;$('approveVideo').disabled=false;
+ notice('Harga sudah diperiksa. Video BELUM dibuat. Tekan Setuju Biaya & Buat MP4 untuk menjalankan 1 render.');
+ resultMsg('Pengguna mengendalikan persetujuan biaya. Periksa harga sebelum melanjutkan.');
+}
+function outputVideo(data){
+ if(data.status==='succeeded'&&Array.isArray(data.files)&&data.files.length){
+  const found=data.files.find(x=>typeof x.url==='string'&&x.url.startsWith('https://'));
+  if(found){
+   $('result').replaceChildren();
+   const v=document.createElement('video');v.controls=true;v.playsInline=true;v.src=found.url;$('result').append(v);
+   const a=document.createElement('a');a.href=found.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Buka video MP4 dari Agensi';$('result').append(a);
+   state.externalUrl=found.url;$('download').disabled=false;$('copy').disabled=false;
+   $('download').textContent='↓ Buka / Simpan MP4';$('copy').textContent='⧉ Salin Link MP4';
+   resultMsg('Video berhasil dibuat.'+(data.charged_usd!=null?' Biaya: US$ '+Number(data.charged_usd).toFixed(3):'')+' · Tautan berlaku sementara.');
+   $('checkJob').hidden=true;return;
+  }
+ }
+ if(data.status==='failed'){resultMsg('Render video gagal. Periksa status Agensi dan jangan mengirim ulang permintaan yang sama.');$('checkJob').hidden=true;return;}
+ notice('Status video: '+String(data.status||'running')+'. Pekerjaan berjalan di server Agensi. Jangan mengirim ulang permintaan untuk menghindari biaya ganda.');
+ $('checkJob').hidden=false;resultMsg('Gunakan tombol Cek Progres Video untuk memuat hasil MP4.');
+}
+async function approveVideo(){
+ const q=state.quote;if(!q||state.busy)return;
+ const agreed=window.confirm('Setuju menggunakan saldo Agensi US$ '+Number(q.price_usd).toFixed(3)+' untuk SATU video '+q.model+'?');
+ if(!agreed)return;
+ lock(true);msg('Menjalankan satu pekerjaan video Agensi...');
+ try{
+  const r=await postJSON('/api/agensi?op=video-run',{quote_id:q.quote_id,price_usd:q.price_usd,confirm_cost:true});const data=await r.json();
+  clearQuote();$('result').replaceChildren();outputVideo(data);msg('Permintaan video telah diproses.');
+ }catch(e){resultMsg('Status pekerjaan belum terkonfirmasi: '+e.message+'. Jangan langsung ulangi pembayaran/render.');msg('Periksa akun Agensi sebelum mengulangi.');}
+ finally{lock(false);}
+}
+async function checkJob(){
+ $('checkJob').disabled=true;resultMsg('Memeriksa pekerjaan video melalui Agensi...');
+ try{const r=await postJSON('/api/agensi?op=video-check',{});const j=await r.json();$('result').replaceChildren();outputVideo(j);}
+ catch(e){resultMsg('Gagal memeriksa status: '+e.message);}
+ finally{$('checkJob').disabled=false;}
+}
+function fileAsData(file){return new Promise((resolve,reject)=>{const r=new FileReader();r.onload=()=>resolve(r.result);r.onerror=()=>reject(Error('Berkas tidak dapat dibaca.'));r.readAsDataURL(file);});}
+async function compressedVisionImage(file){
+ if(!['image/jpeg','image/png','image/webp'].includes(file.type))throw Error('Analisis gambar mendukung JPEG, PNG, atau WebP.');
+ const bitmap=await createImageBitmap(file);
+ try{
+  const ratio=Math.min(1,1200/Math.max(bitmap.width,bitmap.height));
+  const c=document.createElement('canvas');c.width=Math.round(bitmap.width*ratio);c.height=Math.round(bitmap.height*ratio);
+  const ctx=c.getContext('2d');ctx.fillStyle='#ffffff';ctx.fillRect(0,0,c.width,c.height);ctx.drawImage(bitmap,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',.75);
+ }finally{if(bitmap.close)bitmap.close();}
+}
+async function readVideoFrame(file){
+ const url=URL.createObjectURL(file);const video=document.createElement('video');
+ try{
+  video.muted=true;video.preload='auto';video.src=url;
+  await new Promise((ok,fail)=>{video.onloadedmetadata=ok;video.onerror=()=>fail(Error('Video tidak terbaca'));});
+  video.currentTime=Math.min(1,Math.max(0,video.duration/2));
+  await new Promise((ok,fail)=>{video.onseeked=ok;video.onerror=()=>fail(Error('Gagal mengambil frame video'));});
+  const c=document.createElement('canvas');const scale=Math.min(1,1024/video.videoWidth);c.width=Math.max(1,Math.round(video.videoWidth*scale));c.height=Math.max(1,Math.round(video.videoHeight*scale));c.getContext('2d').drawImage(video,0,0,c.width,c.height);
+  return c.toDataURL('image/jpeg',.8);
+ }finally{URL.revokeObjectURL(url);}
+}
+async function generatedAudio(idea){
+ const r=await postJSON('/api/ai',{task:'tts',provider:'sonex',prompt:idea,speed:1,voice_id:''});
+ const blob=await r.blob();if(!blob.type.startsWith('audio/')||blob.size<250)throw Error('Respons bukan audio MP3.');
+ clearResults();state.blob=blob;state.objectUrl=URL.createObjectURL(blob);state.filename='AHIM-Voice-Over.mp3';
+ const audio=document.createElement('audio');audio.controls=true;audio.src=state.objectUrl;$('result').append(audio);
+ $('download').disabled=false;$('download').textContent='↓ Unduh MP3';label('Audio MP3 dibuat oleh Sonex sesuai teks yang dimasukkan.');resultMsg('Suara berhasil dibuat dan siap diunduh.');
+}
+async function generatedText(idea){
+ const kind=$('kind').value==='auto'?'Konten AI':$('kind').value;
+ const payload={ide:idea,jenis:kind,gaya:$('style').value,rasio:$('ratio').value,bahasa:$('language').value,mode:$('promptMode').value,durasi_detik:0};
+ const r=await postJSON('/api/ai',{task:'studio',prompt:JSON.stringify(payload)});const j=await r.json();
+ if(!j.text)throw Error('Model tidak menghasilkan teks.');
+ textResult(j.text,kind);
+}
+async function generatedImage(idea){
+ const f=$('upload').files[0];if(f)throw Error('Generator gambar ini bekerja dari teks. Lampiran referensi belum dapat diedit. Pilih Analisis Gambar untuk menggunakan berkas.');
+ const kind=$('kind').value;
+ if($('promptMode').value==='Auto 5 Gaya'){
+  const styles=['Islami Profesional','Minimalis Modern','Watercolor','Cinematic','Pastel Cute'];
+  clearResults();const deck=document.createElement('div');deck.className='variation-grid';$('result').append(deck);
+  for(let i=0;i<styles.length;i++){
+   msg('Membuat gambar '+(i+1)+'/5 · '+styles[i]+'...');
+   const prompt=buildImagePrompt(idea,kind,styles[i]);
+   const res=await postJSON('/api/ai',{task:'image',prompt});
+   const file=await res.blob();if(!file.type.startsWith('image/')||file.size<500)throw Error('Variasi '+(i+1)+' gagal: gambar tidak tersedia.');
+   const output=await composeImage(file);const url=URL.createObjectURL(output);
+   state.variations.push({blob:output,url,name:'AHIM-'+(i+1)+'-'+styles[i].replace(/[^a-z0-9]/gi,'-')+'.png'});
+   const panel=document.createElement('div');panel.className='variation';
+   const title=document.createElement('b');title.textContent=(i+1)+'. '+styles[i];panel.append(title);
+   const img=document.createElement('img');img.src=url;img.alt='Variasi desain '+styles[i];panel.append(img);
+   const a=document.createElement('a');a.href=url;a.download=state.variations[i].name;a.textContent='↓ Unduh PNG';panel.append(a);
+   deck.append(panel);
+  }
+  $('download').disabled=false;$('copy').disabled=false;$('download').textContent='↓ Unduh Semua (ZIP)';$('copy').textContent='⧉ Salin Gambar Pertama';
+  resultMsg('Lima gambar tersedia. Unduh satu per satu atau gunakan Unduh Semua (ZIP).');return;
+ }
+ const prompt=buildImagePrompt(idea,kind);
+ const r=await postJSON('/api/ai',{task:'image',prompt});const blob=await r.blob();
+ if(!blob.type.startsWith('image/')||blob.size<500)throw Error('Provider belum mengembalikan berkas gambar.');
+ await imageResult(blob);
+}
+async function analyzedMedia(idea,task){
+ const f=$('upload').files[0];if(!f)throw Error('Unggah berkas yang akan dianalisis terlebih dahulu.');
+ if(f.size>(task==='asr'?2.5:7)*1024*1024)throw Error(task==='asr'?'Audio maksimal 2,5 MB untuk batas unggahan server.':'Gambar/video maksimal 7 MB.');
+ const expected=task==='vision'?'image/':task==='asr'?'audio/':'video/';
+ if(!f.type.startsWith(expected))throw Error('Jenis lampiran tidak sesuai. Dibutuhkan '+expected+'*');
+ const body={task,prompt:idea};
+ if(task==='vision')body.image=await compressedVisionImage(f);
+ else if(task==='asr')body.audio=await fileAsData(f);
+ else body.image=await readVideoFrame(f);
+ const r=await postJSON('/api/ai',body);const j=await r.json();if(!j.text)throw Error('Tidak ada hasil analisis.');
+ textResult(j.text,task==='asr'?'Transkripsi Audio':task==='vision'?'Analisis Gambar':'Analisis Frame Video');
+ if(task==='videotext')resultMsg('Hanya SATU frame yang dianalisis. Video penuh dan suara tidak diproses.');
+}
+async function generate(){
+ if(state.busy)return;
+ const task=routeType();const idea=$('idea').value.trim();
+ if(!idea&&!['vision','asr','videotext'].includes(task)){msg('Masukkan ide atau perintah terlebih dahulu.');return;}
+ if(idea.length>12000){msg('Ide terlalu panjang. Maksimal 12.000 karakter.');return;}
+ clearResults();lock(true);
+ const taskName=({image:'gambar asli',text:'konten jadi',tts:'audio MP3',video:'video MP4',imagevideo:'gambar menjadi video',vision:'analisis gambar',asr:'transkripsi',videotext:'analisis frame'}[task]||'hasil');
+ msg('Memproses '+taskName+'...');
+ try{
+  if(task==='video'||task==='imagevideo')await quoteVideo(idea,task);
+  else if(task==='tts')await generatedAudio(idea);
+  else if(task==='image')await generatedImage(idea);
+  else if(task==='text')await generatedText(idea);
+  else await analyzedMedia(idea,task);
+  msg('Proses selesai.'); 
+ }catch(e){msg('Gagal: '+e.message);resultMsg('Periksa masukan atau status provider. Tidak ada hasil palsu yang ditampilkan.');}
+ finally{lock(false);}
+}
+$('generate').onclick=generate;
+$('approveVideo').onclick=approveVideo;
+$('checkJob').onclick=checkJob;
+$('connectAgensi').onclick=()=>{
+ if(window.confirm('Menghubungkan ulang Agensi untuk video mungkin memutus koneksi Agensi yang aktif di ChatGPT atau klien lain. Lanjutkan?'))
+ location.href='/api/agensi?op=connect&video=1&return=studio';
+};
+$('download').onclick=downloadResult;
+$('copy').onclick=copyResult;
+$('print').onclick=()=>window.print();
+$('clear').onclick=clearAll;
+$('kind').onchange=fitUI;$('upload').onchange=fitUI;$('idea').oninput=()=>{if(state.quote)clearQuote();if($('kind').value==='auto')fitUI();};
+for(const id of ['ratio','videoMode','style','language','sourceUrl','exactTitle','promptMode'])$(id).onchange=()=>{if(state.quote)clearQuote();};
+fitUI();
+(async()=>{try{
+ const r=await fetch('/api/health',{cache:'no-store'});const j=await r.json();state.sonex=!!j.sonexConfigured;
+ $('providerStatus').textContent='Cloudflare '+(j.cloudflareConfigured?'siap konfigurasi':'belum disetel')+' · Sonex '+(j.sonexConfigured?'terdaftar':'belum disetel');
+ }catch{$('providerStatus').textContent='Status provider tidak tersedia';}})();
+</script>
+</body>
+</html>

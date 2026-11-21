@@ -80,12 +80,13 @@ test('Cloudflare completed response is mapped into secure video URL',async()=>{
     } finally {globalThis.fetch=original;}
   });
 });
-test('frontend exposes only 5s 480p before expanding rollout',()=>{
+test('unified frontend protects paid video with quote, consent, and one-click render',()=>{
   const html=readFileSync(new URL('../index.html',import.meta.url),'utf8');
-  assert.match(html,/videoEnabled=!!j\.videoEnabled/);
-  assert.match(html,/\$\("generate"\)\.disabled=m==="video"&&!videoEnabled/);
-  const videoSettings=html.split('<details id="videoSettings"')[1]?.split('<details id="imageSettings"')[0]||'';
-  assert.match(videoSettings,/option value="5">5 detik/);
-  assert.doesNotMatch(videoSettings,/option value="10">10 detik/);
-  assert.doesNotMatch(videoSettings,/option value="720p">720p/);
+  assert.match(html,/id="videoMode"/);
+  assert.match(html,/id="approveVideo"/);
+  assert.match(html,/video-quote/);
+  assert.match(html,/video-run/);
+  assert.match(html,/window\.confirm\('Setuju menggunakan saldo Agensi/);
+  assert.match(html,/clearQuote\(\)/);
+  assert.doesNotMatch(html,/<nav(?:\s|>)/);
 });
