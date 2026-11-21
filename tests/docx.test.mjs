@@ -56,6 +56,8 @@ test('Word download is real .docx OOXML, not renamed HTML',()=>{
  assert.match(xml,/Globalisasi &amp; Perubahan Sosial/);
  assert.match(xml,/<w:pStyle w:val="Heading1"/);
  assert.match(xml,/<w:tbl>/);
+ assert.match(xml,/<w:tblGrid>/);
+ assert.match(xml,/<w:gridCol w:w="4500"\/>/);
  assert.match(xml,/<w:tr>/);
  assert.match(xml,/<w:b\/>/);
  assert.match(xml,/<w:bidi\/>/);
