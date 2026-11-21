@@ -43,8 +43,15 @@ function cookies(req){
   }).filter(x=>x[0]&&!x[0].includes(' ')));
 }
 function setCookies(res,entries){
-  res.setHeader('Set-Cookie',entries.map(([name,value,seconds])=>
-    name+'='+value+'; Path=/api/agensi; HttpOnly; Secure; SameSite=Lax; Max-Age='+seconds));
+  const existing=res.getHeader?.('Set-Cookie')||[];
+  const map=new Map();
+  for(const cookie of (Array.isArray(existing)?existing:[existing])){
+    if(typeof cookie==='string'&&cookie.includes('='))map.set(cookie.split('=')[0],cookie);
+  }
+  for(const [name,value,seconds] of entries){
+    map.set(name,name+'='+value+'; Path=/api/agensi; HttpOnly; Secure; SameSite=Lax; Max-Age='+seconds);
+  }
+  res.setHeader('Set-Cookie',[...map.values()]);
 }
 function removeCookies(res,names){setCookies(res,names.map(n=>[n,'',0]));}
 function fail(res,status,message){return res.status(status).json({error:message});}
