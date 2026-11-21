@@ -8,6 +8,9 @@
     },
     "api/video.js": {
       "maxDuration": 60
+    },
+    "api/agensi.js": {
+      "maxDuration": 60
     }
   }
 }
