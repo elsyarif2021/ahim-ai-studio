@@ -101,7 +101,7 @@ test('Vercel preview origin is explicit and rejects arbitrary hosts',async()=>{
 
 test('Agensi library price labels recognize owned free skills and never show NaN',()=>{
   const html=readFileSync(new URL('../agensi.html',import.meta.url),'utf8');
-  const snippet=html.match(/function skillPrice\\(item\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
+  const snippet=html.match(/function skillPrice\(item\)\{[\s\S]*?\n\}/)?.[0];
   assert.ok(snippet,'Skill price formatter missing');
   const sandbox={};
   runInNewContext(snippet+';globalThis.price=skillPrice;',sandbox);
