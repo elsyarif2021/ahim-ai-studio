@@ -211,6 +211,7 @@ async function imageResult(blob){
  const output=await composeImage(blob);
  clearResults();state.blob=output;state.filename='AHIM-Prompt-Kilat-Desain.png';state.objectUrl=URL.createObjectURL(output);
  const img=document.createElement('img');img.src=state.objectUrl;img.alt='Hasil desain gambar AI';$('result').append(img);
+ const title=$('exactTitle').value.trim();
  if(title)label('Judul ditambahkan sebagai lapisan grafis agar ejaannya persis.');
  else label('Gambar dihasilkan oleh model FLUX. Rasio disesuaikan menggunakan pemotongan komposisi pada pratinjau.');
  $('download').disabled=false;resultMsg('Gambar PNG asli siap diunduh.');
