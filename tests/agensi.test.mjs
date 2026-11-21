@@ -1,6 +1,8 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 import handler from '../api/agensi.js';
+import {readFileSync} from 'node:fs';
+import {runInNewContext} from 'node:vm';
 
 function response(){
   return {
@@ -95,4 +97,18 @@ test('Vercel preview origin is explicit and rejects arbitrary hosts',async()=>{
   }finally{
     for(const [k,v] of Object.entries(previous)){if(v===undefined)delete process.env[k];else process.env[k]=v;}
   }
+});
+
+test('Agensi library price labels recognize owned free skills and never show NaN',()=>{
+  const html=readFileSync(new URL('../agensi.html',import.meta.url),'utf8');
+  const snippet=html.match(/function skillPrice\\(item\\)\\{[\\s\\S]*?\\n\\}/)?.[0];
+  assert.ok(snippet,'Skill price formatter missing');
+  const sandbox={};
+  runInNewContext(snippet+';globalThis.price=skillPrice;',sandbox);
+  assert.equal(sandbox.price({source:'free',cost:'free'}),'GRATIS');
+  assert.equal(sandbox.price({price_usd:0}),'GRATIS');
+  assert.equal(sandbox.price({price_usd:1.25}),'US$ 1.25 · berbayar');
+  assert.equal(sandbox.price({source:'free',now_paid:true}),'SEKARANG BERBAYAR · Periksa harga di Agensi');
+  assert.equal(sandbox.price({}),'Harga belum tersedia · periksa di Agensi');
+  assert.ok(html.includes('[hidden]{display:none!important}'),'Hidden UI controls must not remain visible');
 });
