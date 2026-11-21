@@ -100,7 +100,7 @@ const $=id=>document.getElementById(id);
 const VISUAL=new Set(['Gambar AI','Poster','Infografis','Banner','Feed IG','Cover Buku','Sertifikat','Brosur','Logo','Komik','Mockup']);
 const TEXT=new Set(['Artikel','Materi Pelajaran','Rangkuman','LKPD','Worksheet','Slide','Chat AI','Prompt Sistem AI']);
 const ANALYZE={'Analisis Gambar':'vision','Transkripsi Audio':'asr','Analisis Video':'videotext'};
-const state={blob:null,objectUrl:null,variations:[],text:'',filename:'',quote:null,job:false,busy:false,connected:false,videoAuthorized:false,sonex:false};
+const state={blob:null,objectUrl:null,variations:[],text:'',filename:'',externalUrl:'',quote:null,job:false,busy:false,connected:false,videoAuthorized:false,sonex:false};
 function msg(text){$('status').textContent=text;}
 function resultMsg(text){$('resultStatus').textContent=text;}
 function httpError(data,status){return Error(data&&data.error?data.error:'HTTP '+status);}
@@ -113,8 +113,9 @@ function clearQuote(){state.quote=null;$('offer').hidden=true;$('approveVideo').
 function clearResults(){
  if(state.objectUrl){URL.revokeObjectURL(state.objectUrl);state.objectUrl=null}
  for(const v of state.variations)URL.revokeObjectURL(v.url);state.variations=[];
- state.blob=null;state.filename='';state.text='';state.job=false;
+ state.blob=null;state.filename='';state.text='';state.externalUrl='';state.job=false;
  $('result').replaceChildren();$('download').disabled=true;$('copy').disabled=true;$('print').disabled=true;
+ $('download').textContent='↓ Unduh Hasil';$('copy').textContent='⧉ Salin Teks';
  $('checkJob').hidden=true;$('connectAgensi').hidden=true;clearQuote();resultMsg('');
 }
 function clearAll(){clearResults();$('idea').value='';$('exactTitle').value='';$('sourceUrl').value='';$('upload').value='';msg('Siap untuk ide berikutnya.');$('result').innerHTML='<div class="placeholder"><b>✧</b><strong>Masukkan ide untuk mulai berkarya.</strong></div>'}
@@ -122,18 +123,104 @@ function lock(b){state.busy=b;$('generate').disabled=b;$('approveVideo').disable
 function notice(text){const x=document.createElement('div');x.className='source';x.textContent=text;$('result').append(x);return x}
 function insertHeading(text){const h=document.createElement('h3');h.textContent=text;h.style.color='#f5dba0';$('result').append(h);}
 function label(text){const el=document.createElement('p');el.className='hint';el.textContent=text;$('result').append(el);}
-function copyResult(){if(!state.text)return; if(navigator.clipboard)navigator.clipboard.writeText(state.text).then(()=>resultMsg('Teks berhasil disalin.'),()=>resultMsg('Browser menolak akses clipboard.'));else resultMsg('Browser tidak menyediakan clipboard.');}
-function downloadResult(){
- if(!state.blob)return;
- const url=state.objectUrl||URL.createObjectURL(state.blob);const a=document.createElement('a');a.href=url;a.download=state.filename||'hasil-ahim';document.body.append(a);a.click();a.remove();
- if(!state.objectUrl)setTimeout(()=>URL.revokeObjectURL(url),5000);
+async function clipboardText(text){
+ if(typeof text!=='string'||!text.length)throw Error('Tidak ada teks yang dapat disalin.');
+ if(navigator.clipboard?.writeText){
+  try{await navigator.clipboard.writeText(text);return;}catch{/* fallback for restricted mobile browsers */}
+ }
+ const field=document.createElement('textarea');field.value=text;
+ field.setAttribute('readonly','');field.style.position='fixed';field.style.opacity='0';
+ field.style.top='0';field.style.left='0';document.body.append(field);
+ const previous=document.activeElement;
+ try{field.focus();field.select();field.setSelectionRange(0,field.value.length);
+  if(!document.execCommand?.('copy'))throw Error('Browser menolak izin clipboard. Coba pilih teks hasil secara manual.');
+ }finally{field.remove();if(previous?.focus)previous.focus();}
+}
+async function copyImage(blob){
+ if(!blob||!blob.type.startsWith('image/'))throw Error('Gambar belum tersedia.');
+ if(!navigator.clipboard?.write||typeof ClipboardItem==='undefined')
+  throw Error('Browser ini belum mendukung salin gambar. Gunakan Unduh PNG, lalu bagikan gambar dari galeri.');
+ await navigator.clipboard.write([new ClipboardItem({'image/png':blob})]);
+}
+async function copyResult(){
+ try{
+  if(state.text){await clipboardText(state.text);resultMsg('Teks berhasil disalin.');return;}
+  if(state.externalUrl){await clipboardText(state.externalUrl);resultMsg('Tautan video berhasil disalin.');return;}
+  const file=state.variations[0]?.blob||state.blob;
+  if(file?.type.startsWith('image/')){await copyImage(file);resultMsg('Gambar PNG berhasil disalin ke clipboard.');return;}
+  resultMsg('Hasil ini tidak dapat disalin langsung. Silakan gunakan tombol Unduh.');
+ }catch(e){resultMsg('Gagal menyalin: '+e.message);}
+}
+async function downloadBlob(blob,filename){
+ if(!blob||!blob.size)throw Error('Berkas kosong.');
+ if(/iPad|iPhone|iPod/i.test(navigator.userAgent||'')&&typeof File!=='undefined'&&navigator.share){
+  const f=new File([blob],filename,{type:blob.type||'application/octet-stream'});
+  if(navigator.canShare?.({files:[f]})){
+   try{await navigator.share({files:[f],title:filename});resultMsg('Pilih Simpan ke File atau aplikasi tujuan dari menu berbagi.');return;}
+   catch(e){if(e.name==='AbortError'){resultMsg('Penyimpanan dibatalkan.');return;}}
+  }
+ }
+ const url=URL.createObjectURL(blob);
+ const link=document.createElement('a');link.href=url;link.download=filename;
+ link.style.display='none';document.body.append(link);link.click();link.remove();
+ setTimeout(()=>URL.revokeObjectURL(url),60000);
+ resultMsg('Unduhan '+filename+' telah diminta. Periksa folder Download atau izin unduhan browser.');
+}
+function crc32(bytes){
+ let crc=0xffffffff;
+ for(let i=0;i<bytes.length;i++){crc^=bytes[i];for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}
+ return (crc^0xffffffff)>>>0;
+}
+async function packageImagesZip(images){
+ if(!Array.isArray(images)||!images.length||images.length>20)throw Error('Jumlah berkas ZIP tidak valid.');
+ const enc=new TextEncoder();const parts=[],directory=[];let offset=0,directoryBytes=0;
+ for(const item of images){
+  const name=enc.encode(item.name||'gambar.png');const bytes=new Uint8Array(await item.blob.arrayBuffer());
+  if(name.length>65535||bytes.length>0xffffffff)throw Error('Berkas terlalu besar untuk ZIP.');
+  const crc=crc32(bytes),size=bytes.length;
+  const local=new Uint8Array(30),lv=new DataView(local.buffer);
+  lv.setUint32(0,0x04034b50,true);lv.setUint16(4,20,true);lv.setUint32(14,crc,true);
+  lv.setUint32(18,size,true);lv.setUint32(22,size,true);lv.setUint16(26,name.length,true);
+  const center=new Uint8Array(46),cv=new DataView(center.buffer);
+  cv.setUint32(0,0x02014b50,true);cv.setUint16(4,20,true);cv.setUint16(6,20,true);
+  cv.setUint32(16,crc,true);cv.setUint32(20,size,true);cv.setUint32(24,size,true);
+  cv.setUint16(28,name.length,true);cv.setUint32(42,offset,true);
+  parts.push(local,name,bytes);directory.push(center,name);
+  offset+=local.length+name.length+size;directoryBytes+=center.length+name.length;
+ }
+ const end=new Uint8Array(22),view=new DataView(end.buffer);
+ view.setUint32(0,0x06054b50,true);view.setUint16(8,images.length,true);view.setUint16(10,images.length,true);
+ view.setUint32(12,directoryBytes,true);view.setUint32(16,offset,true);
+ return new Blob([...parts,...directory,end],{type:'application/zip'});
+}
+async function downloadResult(){
+ if(state.variations.length){
+  try{resultMsg('Menyiapkan paket ZIP '+state.variations.length+' gambar...');
+   const zip=await packageImagesZip(state.variations);await downloadBlob(zip,'AHIM-5-Gaya.zip');
+  }catch(e){resultMsg('Gagal mengunduh ZIP: '+e.message);}return;
+ }
+ if(state.externalUrl){
+  try{
+   const url=new URL(state.externalUrl);
+   if(url.protocol!=='https:')throw Error('Alamat video tidak aman.');
+   if(url.hostname.endsWith('.supabase.co')&&url.pathname.includes('/storage/v1/object/sign/'))url.searchParams.set('download','AHIM-Video.mp4');
+   const a=document.createElement('a');a.href=url.href;a.target='_blank';a.rel='noopener noreferrer';
+   a.textContent='';document.body.append(a);a.click();a.remove();
+   resultMsg('Membuka berkas MP4 dari Agensi. Jika diputar di browser, gunakan menu Simpan/Download video.');
+  }catch(e){resultMsg('Tidak bisa membuka unduhan video: '+e.message);}return;
+ }
+ if(!state.blob){resultMsg('Belum ada hasil yang dapat diunduh.');return;}
+ try{await downloadBlob(state.blob,state.filename||'AHIM-Hasil');}
+ catch(e){resultMsg('Gagal mengunduh: '+e.message);}
 }
 function downloadTextContent(text,kind){const html='<html lang="id"><head><meta charset="utf-8"><title>AHIM '+escapeHTML(kind)+'</title><style>body{font:14pt/1.6 Arial;color:#172c1f;margin:40px;white-space:pre-wrap}h1{font-size:19pt;color:#16492e}</style></head><body><h1>'+escapeHTML(kind)+'</h1><div>'+escapeHTML(text)+'</div></body></html>';return new Blob([html],{type:'text/html;charset=utf-8'});}
 function escapeHTML(str){return String(str).replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));}
 function textResult(text,titleName){
  clearResults();state.text=text;state.blob=downloadTextContent(text,titleName||'Hasil AI');state.filename='AHIM-'+(titleName||'hasil').replace(/[^a-z0-9_-]/gi,'-')+'.html';
  const p=document.createElement('div');p.className='result-text';p.textContent=text;$('result').append(p);
- $('download').disabled=false;$('copy').disabled=false;$('print').disabled=false;resultMsg('Konten akhir siap. Unduh HTML yang dapat dibuka di Word atau cetak menjadi PDF.');
+ $('download').disabled=false;$('copy').disabled=false;$('print').disabled=false;
+ $('download').textContent='↓ Unduh Dokumen HTML';$('copy').textContent='⧉ Salin Teks';
+ resultMsg('Konten akhir siap. Klik Unduh HTML (bisa dibuka di Word), Salin Teks, atau Cetak/PDF.');
 }
 function routeType(){
  const v=$('kind').value;
@@ -214,7 +301,9 @@ async function imageResult(blob){
  const title=$('exactTitle').value.trim();
  if(title)label('Judul ditambahkan sebagai lapisan grafis agar ejaannya persis.');
  else label('Gambar dihasilkan oleh model FLUX. Rasio disesuaikan menggunakan pemotongan komposisi pada pratinjau.');
- $('download').disabled=false;resultMsg('Gambar PNG asli siap diunduh.');
+ $('download').disabled=false;$('copy').disabled=false;
+ $('download').textContent='↓ Unduh PNG';$('copy').textContent='⧉ Salin Gambar';
+ resultMsg('Gambar siap. Klik Unduh PNG atau Salin Gambar.');
 }
 async function loadVideoStatus(){
  try{const r=await fetch('/api/agensi?op=status',{credentials:'same-origin',cache:'no-store'});const j=await r.json();state.connected=!!j.connected;state.videoAuthorized=!!j.videoAuthorized;}
@@ -249,7 +338,9 @@ function outputVideo(data){
   if(found){
    $('result').replaceChildren();
    const v=document.createElement('video');v.controls=true;v.playsInline=true;v.src=found.url;$('result').append(v);
-   const a=document.createElement('a');a.href=found.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Buka atau unduh MP4 dari Agensi';$('result').append(a);
+   const a=document.createElement('a');a.href=found.url;a.target='_blank';a.rel='noopener noreferrer';a.textContent='Buka video MP4 dari Agensi';$('result').append(a);
+   state.externalUrl=found.url;$('download').disabled=false;$('copy').disabled=false;
+   $('download').textContent='↓ Buka / Simpan MP4';$('copy').textContent='⧉ Salin Link MP4';
    resultMsg('Video berhasil dibuat.'+(data.charged_usd!=null?' Biaya: US$ '+Number(data.charged_usd).toFixed(3):'')+' · Tautan berlaku sementara.');
    $('checkJob').hidden=true;return;
   }
@@ -302,7 +393,7 @@ async function generatedAudio(idea){
  const blob=await r.blob();if(!blob.type.startsWith('audio/')||blob.size<250)throw Error('Respons bukan audio MP3.');
  clearResults();state.blob=blob;state.objectUrl=URL.createObjectURL(blob);state.filename='AHIM-Voice-Over.mp3';
  const audio=document.createElement('audio');audio.controls=true;audio.src=state.objectUrl;$('result').append(audio);
- $('download').disabled=false;label('Audio MP3 dibuat oleh Sonex sesuai teks yang dimasukkan.');resultMsg('Suara berhasil dibuat dan siap diunduh.');
+ $('download').disabled=false;$('download').textContent='↓ Unduh MP3';label('Audio MP3 dibuat oleh Sonex sesuai teks yang dimasukkan.');resultMsg('Suara berhasil dibuat dan siap diunduh.');
 }
 async function generatedText(idea){
  const kind=$('kind').value==='auto'?'Konten AI':$('kind').value;
@@ -330,7 +421,8 @@ async function generatedImage(idea){
    const a=document.createElement('a');a.href=url;a.download=state.variations[i].name;a.textContent='↓ Unduh PNG';panel.append(a);
    deck.append(panel);
   }
-  resultMsg('Lima karya gambar asli tersedia. Klik Unduh PNG pada tiap variasi.');return;
+  $('download').disabled=false;$('copy').disabled=false;$('download').textContent='↓ Unduh Semua (ZIP)';$('copy').textContent='⧉ Salin Gambar Pertama';
+  resultMsg('Lima gambar tersedia. Unduh satu per satu atau gunakan Unduh Semua (ZIP).');return;
  }
  const prompt=buildImagePrompt(idea,kind);
  const r=await postJSON('/api/ai',{task:'image',prompt});const blob=await r.blob();
