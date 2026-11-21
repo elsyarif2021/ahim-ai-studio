@@ -125,6 +125,9 @@ function statuses(req){
   return {configured:!!(process.env.AGENSI_SESSION_SECRET?.length>=32),connected:!!(refresh?.refresh_token),videoAuthorized:!!(refresh?.scope||'').includes('install'),accessActive:!!(access?.exp>Date.now())};
 }
 
+function videoPreviewOnly(){
+  if(process.env.VERCEL_ENV!=='preview')throw Object.assign(new Error('Text-to-Video Agensi hanya tersedia pada Preview yang terautentikasi.'),{status:503});
+}
 function videoSession(req){
   const info=unseal(cookies(req)[COOKIE_REFRESH]);
   if(!info?.refresh_token)throw Object.assign(new Error('Hubungkan akun Agensi terlebih dahulu.'),{status:401});
@@ -151,7 +154,7 @@ function sanitizeVideoJob(data){
     charged_usd:typeof data.charged_usd==='number'?data.charged_usd:null};
 }
 async function quoteVideo(req,res){
-  videoRequest(req);videoSession(req);
+  videoRequest(req);videoSession(req);videoPreviewOnly();
   const {prompt,duration=5,aspect_ratio='16:9',resolution='480p'}=req.body;
   if(typeof prompt!=='string'||prompt.trim().length<8||prompt.length>1600)
     return fail(res,400,'Prompt harus 8–1600 karakter.');
@@ -178,7 +181,7 @@ async function quoteVideo(req,res){
     requires_confirmation:true});
 }
 async function runVideo(req,res){
-  videoRequest(req);videoSession(req);
+  videoRequest(req);videoSession(req);videoPreviewOnly();
   if(req.body.confirm_cost!==true)return fail(res,400,'Persetujuan biaya diperlukan.');
   const saved=unseal(cookies(req)[COOKIE_VIDEO_QUOTE]);
   if(!saved||saved.expires<Date.now()||typeof saved.id!=='string')
@@ -197,7 +200,7 @@ async function runVideo(req,res){
   return res.status(200).json(data);
 }
 async function checkVideo(req,res){
-  videoRequest(req);videoSession(req);
+  videoRequest(req);videoSession(req);videoPreviewOnly();
   const saved=unseal(cookies(req)[COOKIE_VIDEO_JOB]);
   if(!saved||!saved.id||Date.now()-saved.created>7200000)
     return fail(res,404,'Tidak ada pekerjaan video aktif untuk sesi ini.');
