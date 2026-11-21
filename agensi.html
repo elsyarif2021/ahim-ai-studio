@@ -7,6 +7,7 @@
 <title>Agensi Skills Hub · AHIM AI Studio</title>
 <style>
 :root{color-scheme:dark;--bg:#091c14;--panel:#102c1e;--panel2:#173b29;--border:#456c51;--accent:#f0d48c;--text:#eef6ed;--muted:#bfd1c1}*{box-sizing:border-box}body{margin:0;background:radial-gradient(ellipse at 35% -15%,#22583a,#091c14 62%);font:15px/1.6 system-ui,Segoe UI,sans-serif;color:var(--text);min-height:100dvh}a{color:var(--accent)}.wrap{max-width:1140px;margin:auto;padding:20px}.header{display:flex;align-items:center;justify-content:space-between;gap:15px;flex-wrap:wrap;padding:12px 0 23px;border-bottom:1px solid var(--border)}.back{font-weight:700;text-decoration:none;color:var(--accent)}.back:hover{text-decoration:underline}.brand{font-size:13px;color:var(--muted)}h1{font-size:clamp(26px,4vw,39px);color:var(--accent);line-height:1.2;margin:25px 0 12px}h2{font-size:19px;margin:0 0 12px}.intro{max-width:720px;color:var(--muted);margin:0 0 23px}.panel{background:var(--panel);border:1px solid var(--border);padding:20px;border-radius:17px;margin-bottom:20px}.notice{border-left:3px solid var(--accent);background:#283822;padding:12px 15px;color:#e5e3cf;font-size:13px;margin:17px 0;border-radius:5px}button,.linkbutton{background:var(--accent);color:#112e1e;border:0;border-radius:10px;padding:11px 18px;font-weight:750;cursor:pointer;text-decoration:none;display:inline-block;font:inherit}button:disabled{opacity:.55;cursor:default}.outline{border:1px solid #779480;background:#234934;color:white}.danger{background:#562a2a;color:white;border:1px solid #936060}.actions{display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-top:14px}.badge{display:inline-flex;align-items:center;border-radius:99px;background:#254b34;color:#d1f5d7;border:1px solid #496c54;padding:4px 10px;font-size:12px;font-weight:650}.badge.warn{background:#5b4224;color:#ffedc3;border-color:#92723f}.grid{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:15px;margin:17px 0}.skill{border:1px solid var(--border);background:var(--panel);padding:17px;border-radius:14px;display:flex;flex-direction:column;gap:8px}.skill h3{margin:0;font-size:16px;line-height:1.45}.skill p{color:var(--muted);font-size:13px;margin:0;flex:1}.skill a{font-size:13px;font-weight:700}.skill small{color:#b9d3c0}.search{display:flex;gap:10px}.search input{flex:1;min-width:0;border:1px solid var(--border);color:white;background:#0c2518;padding:14px;border-radius:10px;font:inherit}.search input:focus{outline:2px solid #b6ce98;outline-offset:2px}.hint,.status{color:var(--muted);font-size:13px}.status{min-height:20px;margin-top:9px}.section-title{display:flex;align-items:center;justify-content:space-between;gap:10px;flex-wrap:wrap}.empty{text-align:center;padding:20px;color:var(--muted);border:1px dashed var(--border);border-radius:12px}footer{border-top:1px solid var(--border);padding:20px 0 30px;color:var(--muted);font-size:12px;margin-top:30px}#results{min-height:70px}@media(max-width:900px){.grid{grid-template-columns:repeat(2,minmax(0,1fr))}}@media(max-width:600px){.wrap{padding:15px}.grid{grid-template-columns:1fr}.search{flex-direction:column}.panel{padding:16px}.header{align-items:start}button{width:auto}}
+[hidden]{display:none!important}.video-textarea{width:100%;min-height:110px;padding:12px;background:#0c2518;color:#fff;border:1px solid #456c51;border-radius:10px;resize:vertical;font:inherit}.video-result{white-space:pre-wrap;overflow-wrap:anywhere;padding:12px;background:#091c14;border:1px solid #456c51;border-radius:10px}.video-link{font-weight:700}
 </style>
 </head>
 <body>
@@ -31,6 +32,19 @@
 <button id="search" type="submit" disabled>🔎 Cari Skill</button>
 </form><div class="actions"><button id="library" class="outline" type="button" disabled>📚 Pustaka Saya</button></div><div role="status" aria-live="polite" class="status" id="status"></div>
 </section>
+<section class="panel" aria-labelledby="videoHeading">
+<h2 id="videoHeading">🎬 Text-to-Video Agensi · MP4</h2>
+<p class="hint">Buat video 5 detik 480p melalui Seedance 1 Lite dan saldo Agensi Anda. AHIM akan menampilkan harga terlebih dahulu; video hanya dibuat setelah Anda menyetujui biaya tersebut.</p>
+<p id="videoConnectStatus" class="hint">Memeriksa izin Agensi...</p>
+<button type="button" class="outline" id="videoConnect" disabled>🔗 Izinkan Agensi untuk Video</button>
+<div class="actions"><label for="videoPrompt" class="hint">Deskripsi video</label></div>
+<textarea id="videoPrompt" class="video-textarea" maxlength="1600" placeholder="Contoh: Guru mengajar di sekolah Islami modern, kamera bergerak perlahan, pencahayaan alami."></textarea>
+<div class="actions"><label>Rasio <select id="videoAspect"><option value="16:9">16:9</option><option value="9:16">9:16</option><option value="1:1">1:1</option></select></label><span class="hint">Durasi 5 detik · 480p</span></div>
+<div class="actions"><button id="videoQuote" type="button" disabled>1. Cek harga video</button></div>
+<div id="videoOffer" class="notice" hidden><strong id="videoOfferPrice">Harga belum tersedia</strong><p class="hint">Persetujuan hanya untuk satu render. Tarif dibayar dari saldo Agensi dan tidak dikenakan bila render gagal.</p><button type="button" id="videoRender" disabled>2. Setuju biaya dan buat MP4</button></div>
+<p id="videoProgress" class="status" role="status" aria-live="polite"></p><button type="button" class="outline" id="videoCheck" hidden>⟳ Cek progres video</button>
+<div id="videoFile" class="video-result" hidden></div>
+</section>
 <div class="section-title"><h2>Hasil pencarian</h2><span id="count" class="hint">Belum ada pencarian</span></div>
 <div id="results"><div class="empty">Hubungkan Agensi untuk melakukan pencarian langsung melalui MCP.</div></div>
 <section class="panel"><h2>Rekomendasi untuk AHIM</h2><p class="hint">Pilihan skill gratis dari katalog Agensi. Tautan ini dapat dibuka tanpa menyambungkan akun.</p>
@@ -42,7 +56,7 @@
 'use strict';
 const $=id=>document.getElementById(id);
 const endpoint='/api/agensi';
-let connected=false,configured=false;
+let connected=false,configured=false,videoAuthorized=false,videoOffer=null,rendering=false;
 const suggested=[
  {name:'Code Review Lite',url:'https://agensi.io/skills/code-review-lite-severity-checklist',best_for:'Audit bug dan risiko kode JavaScript.',price_usd:0},
  {name:'Cloudflare Workers AI',url:'https://agensi.io/skills/cloudflare-workers-edge-apis-with-d1-kv-r2-ai',best_for:'Backend Cloudflare, D1, KV, R2, dan AI.',price_usd:0},
@@ -56,11 +70,15 @@ async function json(url,options){const r=await fetch(url,{credentials:'same-orig
 async function status(){
  try{
   const x=await json(endpoint+'?op=status');
-  connected=!!x.connected;configured=!!x.configured;
+  connected=!!x.connected;configured=!!x.configured;videoAuthorized=!!x.videoAuthorized;
   $('badge').textContent=connected?'● Terhubung':configured?'● Belum terhubung':'⚠ Perlu konfigurasi';
   $('badge').classList.toggle('warn',!connected);
   $('connectionText').textContent=connected?'Akun Agensi sudah terhubung di browser ini. Pencarian skill melalui MCP tersedia.':configured?'Koneksi OAuth telah disiapkan. Anda dapat menghubungkan akun secara sadar.':'Konfigurasi backend AGENSI_SESSION_SECRET belum tersedia. Admin perlu mengaktifkannya pada Vercel.';
   $('connect').hidden=connected;$('connect').disabled=!configured;$('disconnect').hidden=!connected;$('search').disabled=!connected;$('library').disabled=!connected;
+  $('videoConnectStatus').textContent=!connected?'Hubungkan akun Agensi terlebih dahulu.':videoAuthorized?'Izin video Agensi tersedia. Anda dapat memeriksa harga.':'Koneksi hanya memiliki izin membaca. Anda harus mengizinkan penggunaan tool video melalui Agensi.';
+  $('videoConnect').disabled=!configured;
+  $('videoConnect').hidden=connected&&videoAuthorized;
+  $('videoQuote').disabled=!(connected&&videoAuthorized);
   if(connected)message('Siap mencari skill. Tidak ada pembelian otomatis.');
  }catch(e){$('badge').textContent='⚠ Status tidak tersedia';$('connectionText').textContent='Tidak dapat memeriksa API Agensi: '+e.message;$('connect').disabled=true;message('Periksa deployment Vercel dan endpoint backend.');}
 }
@@ -98,6 +116,59 @@ $('library').onclick=async()=>{
   message('Pustaka akun berhasil diperiksa.');
  }catch(e){message('Gagal memuat pustaka: '+e.message);}
  finally{$('library').disabled=!connected;}
+};
+
+$('videoConnect').onclick=()=>{
+ if(!confirm('Menghubungkan ulang Agensi untuk memberi izin video dapat memutus koneksi Agensi yang aktif di ChatGPT atau klien lainnya. Lanjutkan?'))return;
+ location.href=endpoint+'?op=connect&video=1';
+};
+function videoStatus(message){$('videoProgress').textContent=message;}
+function clearVideoQuote(){videoOffer=null;$('videoOffer').hidden=true;$('videoRender').disabled=true;}
+$('videoQuote').onclick=async()=>{
+ if(!connected||!videoAuthorized)return videoStatus('Hubungkan akun Agensi dengan izin video dahulu.');
+ const prompt=$('videoPrompt').value.trim();
+ if(prompt.length<8)return videoStatus('Tuliskan ide video minimal 8 karakter.');
+ clearVideoQuote();$('videoQuote').disabled=true;$('videoFile').hidden=true;
+ videoStatus('Menghitung harga video dari Agensi, belum ada tagihan...');
+ try{
+  const quote=await json(endpoint+'?op=video-quote',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({prompt,aspect_ratio:$('videoAspect').value,duration:5,resolution:'480p'})});
+  if(!quote.quote_id||!(Number(quote.price_usd)>0))throw Error('Harga tidak valid.');
+  videoOffer=quote;
+  $('videoOfferPrice').textContent='Harga satu video: US$ '+Number(quote.price_usd).toFixed(3)+' · Seedance 1 Lite';
+  $('videoOffer').hidden=false;$('videoRender').disabled=false;
+  videoStatus('Periksa harga. Tidak ada video yang dijalankan sebelum klik persetujuan.');
+ }catch(e){videoStatus('Gagal menghitung harga: '+e.message);}
+ finally{$('videoQuote').disabled=!(connected&&videoAuthorized);}
+};
+function showVideo(data){
+ if(data.status==='succeeded'&&Array.isArray(data.files)&&data.files.length){
+   const file=data.files.find(x=>typeof x.url==='string'&&x.url.startsWith('https://'));
+   if(file){const a=el('a','video-link','▶ Buka atau simpan video MP4 hasil Agensi');a.href=file.url;a.target='_blank';a.rel='noopener noreferrer';$('videoFile').replaceChildren(a);$('videoFile').hidden=false;}
+   videoStatus('Video berhasil dibuat. Link hasil bersifat sementara (sekitar 7 hari).');
+ }else if(data.status==='failed'){videoStatus('Pembuatan video gagal. Periksa saldo dan status Agensi.');}
+ else videoStatus('Proses video: '+String(data.status||'running')+'. Gunakan tombol Cek progres untuk memperbarui status.');
+}
+$('videoRender').onclick=async()=>{
+ if(!videoOffer||rendering)return;
+ if(!confirm('Setuju membuat 1 video dan membayar maksimal US$ '+Number(videoOffer.price_usd).toFixed(3)+' dari saldo Agensi?'))return;
+ rendering=true;$('videoRender').disabled=true;$('videoQuote').disabled=true;
+ videoStatus('Menjalankan model video melalui Agensi...');
+ try{
+  const data=await json(endpoint+'?op=video-run',{method:'POST',headers:{'Content-Type':'application/json'},
+   body:JSON.stringify({quote_id:videoOffer.quote_id,price_usd:videoOffer.price_usd,confirm_cost:true})});
+  clearVideoQuote();showVideo(data);
+  if(data.job_id&&data.status!=='succeeded')$('videoCheck').hidden=false;
+ }catch(e){videoStatus('Render tidak dapat dikonfirmasi: '+e.message+'. Jangan mengirim ulang sebelum cek status.');}
+ finally{rendering=false;$('videoQuote').disabled=!(connected&&videoAuthorized);}
+};
+$('videoCheck').onclick=async()=>{
+ $('videoCheck').disabled=true;videoStatus('Memeriksa status video Agensi...');
+ try{
+  const d=await json(endpoint+'?op=video-check',{method:'POST',headers:{'Content-Type':'application/json'},body:'{}'});
+  showVideo(d);if(d.status==='succeeded'||d.status==='failed')$('videoCheck').hidden=true;
+ }catch(e){videoStatus('Status video belum bisa diperiksa: '+e.message);}
+ finally{$('videoCheck').disabled=false;}
 };
 populate($('recommended'),suggested);
 const params=new URLSearchParams(location.search);
