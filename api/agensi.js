@@ -6,6 +6,15 @@ const ORIGIN='https://ahim-ai-studio.vercel.app';
 const COOKIE_TX='ahim_agensi_tx';
 const COOKIE_ACCESS='ahim_agensi_access';
 const COOKIE_REFRESH='ahim_agensi_refresh';
+const COOKIE_VIDEO_QUOTE='ahim_agensi_video_quote';
+const COOKIE_VIDEO_JOB='ahim_agensi_video_job';
+const VIDEO_TOOL='replicate.video-gen.seedance-1-lite';
+const MAX_VIDEO_PRICE=0.5;
+function appOrigin(){
+  const host=String(process.env.VERCEL_URL||'');
+  if(process.env.VERCEL_ENV==='preview' && /^ahim-ai-studio-[a-z0-9-]+\.vercel\.app$/i.test(host))return 'https://'+host;
+  return ORIGIN;
+}
 const MAX_JSON=160000;
 
 const b64=x=>Buffer.from(x).toString('base64url');
@@ -52,7 +61,7 @@ async function requestJson(url,options={}){
   if(!r.ok)throw Object.assign(new Error(data.error_description||data.error||'Agensi HTTP '+r.status),{status:r.status===429?429:502});
   return data;
 }
-function cbUrl(){return ORIGIN+'/api/agensi?op=callback';}
+function cbUrl(){return appOrigin()+'/api/agensi?op=callback';}
 function safeEqual(a,b){
   const x=Buffer.from(String(a||'')),y=Buffer.from(String(b||''));
   return x.length===y.length && timingSafeEqual(x,y);
@@ -106,8 +115,91 @@ async function getToken(req,res){
 }
 function statuses(req){
   const all=cookies(req),access=unseal(all[COOKIE_ACCESS]),refresh=unseal(all[COOKIE_REFRESH]);
-  return {configured:!!(process.env.AGENSI_SESSION_SECRET?.length>=32),connected:!!(refresh?.refresh_token),accessActive:!!(access?.exp>Date.now())};
+  return {configured:!!(process.env.AGENSI_SESSION_SECRET?.length>=32),connected:!!(refresh?.refresh_token),videoAuthorized:!!(refresh?.scope||'').includes('install'),accessActive:!!(access?.exp>Date.now())};
 }
+
+function videoSession(req){
+  const info=unseal(cookies(req)[COOKIE_REFRESH]);
+  if(!info?.refresh_token)throw Object.assign(new Error('Hubungkan akun Agensi terlebih dahulu.'),{status:401});
+  if(!String(info.scope||'').split(' ').includes('install'))throw Object.assign(new Error('Hubungkan ulang Agensi dengan izin video terlebih dahulu.'),{status:403});
+}
+function videoRequest(req){
+  const origin=req.headers?.origin;
+  if(origin!==appOrigin())throw Object.assign(new Error('Asal permintaan tidak diizinkan.'),{status:403});
+  if(!/^application\/json(?:\s*;|$)/i.test(String(req.headers?.['content-type']||'')))
+    throw Object.assign(new Error('Gunakan application/json.'),{status:415});
+  if(!req.body || typeof req.body!=='object'||Array.isArray(req.body))
+    throw Object.assign(new Error('Format permintaan tidak valid.'),{status:400});
+}
+function secureVideoUrl(url){
+  try{const u=new URL(url);return u.protocol==='https:'?u.href:null;}catch{return null;}
+}
+function sanitizeVideoJob(data){
+  const jobId=typeof data.job_id==='string'&&/^[a-zA-Z0-9_-]{8,100}$/.test(data.job_id)?data.job_id:null;
+  const files=Array.isArray(data.files)?data.files.slice(0,3).map(x=>({
+    url:secureVideoUrl(x?.url),
+    type:typeof x?.type==='string'?x.type:null
+  })).filter(x=>x.url):[];
+  return {status:String(data.status||'unknown').slice(0,60),job_id:jobId,files,
+    charged_usd:typeof data.charged_usd==='number'?data.charged_usd:null};
+}
+async function quoteVideo(req,res){
+  videoRequest(req);videoSession(req);
+  const {prompt,duration=5,aspect_ratio='16:9',resolution='480p'}=req.body;
+  if(typeof prompt!=='string'||prompt.trim().length<8||prompt.length>1600)
+    return fail(res,400,'Prompt harus 8–1600 karakter.');
+  if(duration!==5||resolution!=='480p'||!['16:9','9:16','1:1'].includes(aspect_ratio))
+    return fail(res,400,'Mode Agensi hanya 5 detik, 480p.');
+  const token=await getToken(req,res);
+  const reply=await toolCall(token,'quote_tool',{
+    skill_slug:'ai-video-prompt-director',
+    tool:VIDEO_TOOL,
+    request:{body:{input:{prompt:prompt.trim(),duration,resolution,aspect_ratio}}},
+    summary:'Satu video 5 detik 480p dari AHIM AI Studio',
+    reason:'Menghitung harga video sebelum pengguna menyetujuinya.'
+  });
+  const amount=Number(reply.price_usd);
+  if(reply.status!=='quote'||typeof reply.quote_id!=='string'||
+    !Number.isFinite(amount)||amount<=0||amount>MAX_VIDEO_PRICE)
+    return fail(res,502,'Penawaran harga Agensi tidak sesuai atau melebihi batas US$0,50.');
+  const now=Date.now(),expires=now+Math.min(300000,Math.max(30000,
+    Date.parse(reply.expires_at||'')-now||300000));
+  setCookies(res,[[COOKIE_VIDEO_QUOTE,seal({id:reply.quote_id,price:amount,
+    expires,subject:prompt.trim()}),300],[COOKIE_VIDEO_JOB,'',0]]);
+  return res.status(200).json({quote_id:reply.quote_id,price_usd:amount,
+    model:'Seedance 1 Lite',duration,resolution,aspect_ratio,expires_at:new Date(expires).toISOString(),
+    requires_confirmation:true});
+}
+async function runVideo(req,res){
+  videoRequest(req);videoSession(req);
+  if(req.body.confirm_cost!==true)return fail(res,400,'Persetujuan biaya diperlukan.');
+  const saved=unseal(cookies(req)[COOKIE_VIDEO_QUOTE]);
+  if(!saved||saved.expires<Date.now()||typeof saved.id!=='string')
+    return fail(res,400,'Penawaran sudah habis. Buat penawaran baru.');
+  if(req.body.quote_id!==saved.id||req.body.price_usd!==saved.price)
+    return fail(res,400,'Harga atau ID penawaran tidak cocok.');
+  const token=await getToken(req,res);
+  const reply=await toolCall(token,'run_tool',{
+    quote_id:saved.id,confirm:true,price_usd:saved.price,
+    reason:'Menjalankan video 5 detik sesuai penawaran yang disetujui pengguna.'
+  });
+  const data=sanitizeVideoJob(reply);
+  if(data.job_id)setCookies(res,[[COOKIE_VIDEO_JOB,seal({id:data.job_id,created:Date.now()}),7200],
+    [COOKIE_VIDEO_QUOTE,'',0]]);
+  else setCookies(res,[[COOKIE_VIDEO_QUOTE,'',0]]);
+  return res.status(200).json(data);
+}
+async function checkVideo(req,res){
+  videoRequest(req);videoSession(req);
+  const saved=unseal(cookies(req)[COOKIE_VIDEO_JOB]);
+  if(!saved||!saved.id||Date.now()-saved.created>7200000)
+    return fail(res,404,'Tidak ada pekerjaan video aktif untuk sesi ini.');
+  const token=await getToken(req,res);
+  const reply=await toolCall(token,'check_job',{job_id:saved.id,
+    reason:'Memeriksa progres pembuatan video Agensi.'});
+  return res.status(200).json(sanitizeVideoJob(reply));
+}
+
 export default async function handler(req,res){
   res.setHeader('Cache-Control','no-store, private');res.setHeader('X-Content-Type-Options','nosniff');
   const op=String(req.query.op||'status');
@@ -123,11 +215,12 @@ export default async function handler(req,res){
       })});
       if(!registration.client_id)throw new Error('Agensi tidak memberikan client_id.');
       const verifier=b64(randomBytes(48)),state=b64(randomBytes(24));
+      const scope=req.query.video==='1'?'read install':'read';
       const challenge=b64(createHash('sha256').update(verifier).digest());
-      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),created:Date.now()};
+      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),scope,created:Date.now()};
       setCookies(res,[[COOKIE_TX,seal(tx),600]]);
       const auth=new URL(allowed(meta.authorization_endpoint));
-      for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope:'read',state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
+      for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope,state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
       return res.redirect(302,auth.href);
     }
     if(op==='callback' && req.method==='GET'){
@@ -138,11 +231,14 @@ export default async function handler(req,res){
       const data=await requestJson(tx.token_endpoint,{method:'POST',headers:{'Content-Type':'application/x-www-form-urlencoded'},body});
       if(!data.access_token || !data.refresh_token)throw new Error('Token OAuth Agensi tidak lengkap.');
       const ttl=Math.max(60,Math.min(3600,Number(data.expires_in)||3600));
-      setCookies(res,[accessCookie(data.access_token,ttl),refreshCookie({refresh_token:data.refresh_token,client_id:tx.client_id,token_endpoint:tx.token_endpoint}),[COOKIE_TX,'',0]]);
+      setCookies(res,[accessCookie(data.access_token,ttl),refreshCookie({refresh_token:data.refresh_token,client_id:tx.client_id,token_endpoint:tx.token_endpoint,scope:tx.scope}),[COOKIE_TX,'',0]]);
       return res.redirect(302,'/agensi.html?connected=1');
     }
+    if(op==='video-quote' && req.method==='POST')return await quoteVideo(req,res);
+    if(op==='video-run' && req.method==='POST')return await runVideo(req,res);
+    if(op==='video-check' && req.method==='POST')return await checkVideo(req,res);
     if(op==='disconnect' && req.method==='POST'){
-      removeCookies(res,[COOKIE_TX,COOKIE_ACCESS,COOKIE_REFRESH]);
+      removeCookies(res,[COOKIE_TX,COOKIE_ACCESS,COOKIE_REFRESH,COOKIE_VIDEO_QUOTE,COOKIE_VIDEO_JOB]);
       return res.status(200).json({connected:false});
     }
     if(op==='search' && req.method==='GET'){
@@ -165,7 +261,7 @@ export default async function handler(req,res){
     }
     return fail(res,405,'Metode atau operasi tidak tersedia.');
   }catch(e){
-    const status=[400,401,403,429,503].includes(e.status)?e.status:502;
+    const status=[400,401,403,404,415,429,503].includes(e.status)?e.status:502;
     return fail(res,status,status===502?'Koneksi Agensi gagal: '+String(e.message||'error').slice(0,180):String(e.message||'error').slice(0,180));
   }
 }
