@@ -335,7 +335,7 @@ $('approveVideo').onclick=approveVideo;
 $('checkJob').onclick=checkJob;
 $('connectAgensi').onclick=()=>{
  if(window.confirm('Menghubungkan ulang Agensi untuk video mungkin memutus koneksi Agensi yang aktif di ChatGPT atau klien lain. Lanjutkan?'))
- location.href='/api/agensi?op=connect&video=1';
+ location.href='/api/agensi?op=connect&video=1&return=studio';
 };
 $('download').onclick=downloadResult;
 $('copy').onclick=copyResult;
