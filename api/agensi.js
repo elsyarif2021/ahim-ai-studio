@@ -245,7 +245,7 @@ export default async function handler(req,res){
       const verifier=b64(randomBytes(48)),state=b64(randomBytes(24));
       const scope=req.query.video==='1'?'read install':'read';
       const challenge=b64(createHash('sha256').update(verifier).digest());
-      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),scope,created:Date.now()};
+      const tx={state,verifier,client_id:registration.client_id,token_endpoint:allowed(meta.token_endpoint),scope,returnTo:req.query.return==='studio'?'studio':'agensi',created:Date.now()};
       setCookies(res,[[COOKIE_TX,seal(tx),600]]);
       const auth=new URL(allowed(meta.authorization_endpoint));
       for(const [k,v] of Object.entries({response_type:'code',client_id:tx.client_id,redirect_uri:cbUrl(),scope,state,code_challenge:challenge,code_challenge_method:'S256',resource:RESOURCE}))auth.searchParams.set(k,v);
@@ -260,7 +260,7 @@ export default async function handler(req,res){
       if(!data.access_token || !data.refresh_token)throw new Error('Token OAuth Agensi tidak lengkap.');
       const ttl=Math.max(60,Math.min(3600,Number(data.expires_in)||3600));
       setCookies(res,[accessCookie(data.access_token,ttl),refreshCookie({refresh_token:data.refresh_token,client_id:tx.client_id,token_endpoint:tx.token_endpoint,scope:tx.scope}),[COOKIE_TX,'',0]]);
-      return res.redirect(302,'/agensi.html?connected=1');
+      return res.redirect(302,tx.returnTo==='studio'?'/?agensi=connected':'/agensi.html?connected=1');
     }
     if(op==='video-quote' && req.method==='POST')return await quoteVideo(req,res);
     if(op==='video-run' && req.method==='POST')return await runVideo(req,res);
